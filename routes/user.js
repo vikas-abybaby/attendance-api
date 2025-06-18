@@ -7,14 +7,16 @@ const authMiddleware = require('../middlewares/user');
 const userController = require('../controllers/user');
 const upload = multer();
 
-// POST /api/users
-router.get('/', userController.getAllUsers);  // GET all users
-router.post('/add', upload.none(), userController.createUser);
-router.post('/edit', upload.none(), userController.updateUserById);  // GET all users
+
+router.get('/', authMiddleware, userController.getAllUsers);
 router.post('/login', upload.none(), userController.userLogin);
-router.get('/profile', upload.none(), authMiddleware, userController.userProfile,)
+router.post('/add', upload.none(), authMiddleware, userController.createUser);
+router.post('/edit', upload.none(), authMiddleware, userController.updateUserById);
+router.get('/profile', upload.none(), authMiddleware, userController.userProfile);
+router.get('/birthdays',upload.none(),  authMiddleware, userController.userBirthday);
+router.get('/anniversarys',upload.none(),  authMiddleware, userController.userAnniversary);
 module.exports = router;
 
 
-//base url
-// http://172.20.10.4:8001/api/v1/
+// base url
+// http://192.168.0.111:27017/api/v1/
