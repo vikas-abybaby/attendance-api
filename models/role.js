@@ -4,12 +4,11 @@ const roleSchema = new mongoose.Schema({
     roleName: {
         type: String,
         required: true,
-        // unique: true
     },
 
 }, {
     versionKey: false,
-    timestamps: { createdAt: true, updatedAt: false } // adds `createdAt` field automatically
+    timestamps: { createdAt: true, updatedAt: false }
 });
 
 module.exports = mongoose.model('Role', roleSchema);

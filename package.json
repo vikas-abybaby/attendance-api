@@ -19,5 +19,6 @@
     "node-js-first-project": "file:",
     "nodemon": "^3.1.10"
   },
+  "keywords": [],
   "description": ""
 }
