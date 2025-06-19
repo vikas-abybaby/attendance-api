@@ -1,62 +1,66 @@
-const Attendance = require("../models/attendance");
-const User = require("../models/user");
-const TodayAttendance = require("../utils/dateHelper")
+const Leave = require('../models/Leave');
+const User = require('../models/user');
+const TodayAttendance = require('../utils/dateHelper')
 
-
-const checkMarkAttendance = async (req, res) => {
-    const userId = req.user.userId;
-    const today = TodayAttendance.getTodayIST();
-    const currentTime = TodayAttendance.getCurrentISTTime();
-
-    const location = req.body.location;
-
+const addLeave = async (req, res) => {
     try {
-        let attendance = await Attendance.findOne({ userId, date: today });
-        if (!attendance) {
-            attendance = await Attendance.create({
-                userId,
-                date: today,
-                checkInTime: currentTime || null,
-                checkInLocation: location || null
-            });
+        const today = TodayAttendance.getTodayIST();
+        const userId = req.user.userId;
+        const { startDate = null, endDate = null, reason = null } = req.body;
 
-            return res.status(201).json({
-                message: "Checked in successfully.",
-                status_code: 201,
-                data: attendance
+        if (!startDate || !endDate || !reason) {
+            return res.status(400).json({
+                message: 'Start date, end date, and reason are required.',
+                status_code: 400,
+                data: null
             });
         }
 
-
-        if (attendance.checkInTime && !attendance.checkOutTime) {
-            attendance.checkOutTime = currentTime || null;
-            attendance.checkOutLocation = location || null;
-            await attendance.save();
-
-            return res.status(200).json({
-                message: "Checked out successfully.",
-                status_code: 200,
-                data: attendance
-            });
-        }
-
-
-        return res.status(200).json({
-            message: "You have already checked in and checked out today.",
-            status_code: 200,
-            data: attendance
+        // Check if a leave already exists in that range
+        const existingLeave = await Leave.findOne({
+            userId,
+            $or: [
+                {
+                    startDate: { $lte: endDate },
+                    endDate: { $gte: startDate }
+                }
+            ]
         });
 
-    } catch (err) {
+        if (existingLeave) {
+            return res.status(409).json({
+                message: 'You have already requested leave during this period.',
+                status_code: 409,
+                data: existingLeave
+            });
+        }
+
+        const newLeave = await Leave.create({
+            userId,
+            startDate: startDate,
+            date: today,
+            endDate: endDate,
+            reason: reason,
+
+        });
+
+        return res.status(201).json({
+            message: 'Leave request submitted.',
+            status_code: 201,
+            data: newLeave
+        });
+
+    } catch (error) {
+        console.error("Error adding leave:", error);
         return res.status(500).json({
-            message: "Server error during attendance check.",
+            message: 'Server error.',
             status_code: 500,
             data: null
         });
     }
 };
+const allLeave = async (req, res) => {
 
-const allMarkAttendance = async (req, res) => {
     try {
         const today = TodayAttendance.getTodayIST();
         const { startDate = today, endDate = today } = req.body || {};
@@ -71,12 +75,11 @@ const allMarkAttendance = async (req, res) => {
                 $lte: endDate
             };
         }
-
         if (user.role === 'hr') {
             const employeeIds = await User.find({ role: 'employee' }).select('_id');
 
             const employeeIdStrings = employeeIds.map(u => u._id.toString());
-            filter = await Attendance.find({
+            filter = await Leave.find({
                 userId: { $in: employeeIdStrings },
                 ...dateFilter
             }).populate('userId', '-password');
@@ -85,7 +88,7 @@ const allMarkAttendance = async (req, res) => {
                 role: { $in: ['employee', 'hr'] }
             }).select('_id');
             const employeeIdStrings = employeeIds.map(u => u._id.toString());
-            filter = await Attendance.find({
+            filter = await Leave.find({
                 userId: { $in: employeeIdStrings },
                 ...dateFilter
             }).populate('userId', '-password');
@@ -94,7 +97,7 @@ const allMarkAttendance = async (req, res) => {
                 role: { $in: ['manager', 'employee', 'hr'] }
             }).select('_id');
             const employeeIdStrings = employeeIds.map(u => u._id.toString());
-            filter = await Attendance.find({
+            filter = await Leave.find({
                 userId: { $in: employeeIdStrings },
                 ...dateFilter
             }).populate('userId', '-password');
@@ -103,13 +106,12 @@ const allMarkAttendance = async (req, res) => {
         }
         const result = filter.map(att => ({
             ...att.userId?.toObject(),
-            attendance: {
+            leave: {
                 _id: att._id,
-                date: att.date,
-                checkInTime: att.checkInTime,
-                checkOutTime: att.checkOutTime,
-                checkInLocation: att.checkInLocation,
-                checkOutLocation: att.checkOutLocation,
+                start_date: att.startDate,
+                end_date: att.endDate,
+                status: att.status,
+                reason: att.reason,
                 createdAt: att.createdAt,
                 updatedAt: att.updatedAt,
             }
@@ -117,7 +119,7 @@ const allMarkAttendance = async (req, res) => {
 
 
         res.status(200).json({
-            message: 'Attendance fetched successfully',
+            message: 'Leave fetched successfully',
             status_code: 200,
             data: result
         });
@@ -130,9 +132,9 @@ const allMarkAttendance = async (req, res) => {
             data: null
         });
     }
-};
+}
 
-const myMarkAttendance = async (req, res) => {
+const myLeave = async (req, res) => {
     try {
         const today = TodayAttendance.getTodayIST();
         const { startDate = today, endDate = today } = req.body || {};
@@ -145,19 +147,18 @@ const myMarkAttendance = async (req, res) => {
             };
         }
 
-        const filter = await Attendance.find({
+        const filter = await Leave.find({
             userId: { $in: req.user.userId },
             ...dateFilter
         }).populate('userId', '-password');
         const result = filter.map(att => ({
             ...att.userId?.toObject(),
-            attendance: {
+            leave: {
                 _id: att._id,
-                date: att.date,
-                checkInTime: att.checkInTime,
-                checkOutTime: att.checkOutTime,
-                checkInLocation: att.checkInLocation,
-                checkOutLocation: att.checkOutLocation,
+                start_date: att.startDate,
+                end_date: att.endDate,
+                status: att.status,
+                reason: att.reason,
                 createdAt: att.createdAt,
                 updatedAt: att.updatedAt,
             }
@@ -165,7 +166,7 @@ const myMarkAttendance = async (req, res) => {
 
 
         res.status(200).json({
-            message: 'Attendance fetched successfully',
+            message: 'Leave fetched successfully',
             status_code: 200,
             data: result
         });
@@ -180,9 +181,4 @@ const myMarkAttendance = async (req, res) => {
     }
 }
 
-
-module.exports = {
-    checkMarkAttendance,
-    myMarkAttendance,
-    allMarkAttendance,
-}
+module.exports = { addLeave, allLeave, myLeave };
