@@ -26,7 +26,16 @@ const attendanceSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
-
+    activityLatLong: {
+        type: [
+            {
+                lat: { type: String, required: true },
+                long: { type: String, required: true },
+                time: { type: String ,required: true },
+            }
+        ],
+        default: []
+    },
 }, { versionKey: false, timestamps: true });
 
 attendanceSchema.index({ userId: 1, date: 1 }, { unique: true });

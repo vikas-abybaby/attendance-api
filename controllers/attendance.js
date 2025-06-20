@@ -8,7 +8,7 @@ const checkMarkAttendance = async (req, res) => {
     const today = TodayAttendance.getTodayIST();
     const currentTime = TodayAttendance.getCurrentISTTime();
 
-    const location = req.body.location;
+    const {location,lat,long} = req.body;
 
     try {
         let attendance = await Attendance.findOne({ userId, date: today });
@@ -17,7 +17,14 @@ const checkMarkAttendance = async (req, res) => {
                 userId,
                 date: today,
                 checkInTime: currentTime || null,
-                checkInLocation: location || null
+                checkInLocation: location || null,
+                activityLatLong: [
+                        { 
+                            lat: lat.toString(), 
+                            long: long.toString(), 
+                            time:currentTime,
+                        }
+                    ]
             });
 
             return res.status(201).json({
@@ -31,6 +38,11 @@ const checkMarkAttendance = async (req, res) => {
         if (attendance.checkInTime && !attendance.checkOutTime) {
             attendance.checkOutTime = currentTime || null;
             attendance.checkOutLocation = location || null;
+            attendance.activityLatLong.push({
+                lat: lat.toString(),
+                long: long.toString(),
+                time:currentTime,
+            });
             await attendance.save();
 
             return res.status(200).json({
@@ -55,6 +67,50 @@ const checkMarkAttendance = async (req, res) => {
         });
     }
 };
+
+const activityRecords = async (req,res) => {
+    try {
+        const userId = req.user.userId;
+        const today = TodayAttendance.getTodayIST();
+        const time = TodayAttendance.getCurrentISTTime();
+        const { lat = null, long = null } = req.body;
+
+    if (!lat || !long) {
+        return res.status(400).json({
+        message: 'Latitude and Longitude are required fields',
+        status_code: 400,
+        data: null
+        });
+    }
+    const attendance = await Attendance.findOne({ userId, date: today });
+    if (!attendance) {
+      return res.status(404).json({
+        message: 'Attendance not found for today',
+        status_code: 404,
+      });
+    }
+    attendance.activityLatLong = attendance.activityLatLong || [];
+    attendance.activityLatLong.push({
+      lat: lat.toString(),
+      long: long.toString(),
+      time:time,
+    });
+    await attendance.save();
+        return res.status(200).json({
+            message: 'Location updated successfully',
+            status_code: 200,
+            data: attendance.activityLatLong,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Server error during attendance check.",
+            status_code: 500,
+            data: null
+        });
+    }   
+}
+
 
 const allMarkAttendance = async (req, res) => {
     try {
@@ -184,5 +240,6 @@ const myMarkAttendance = async (req, res) => {
 module.exports = {
     checkMarkAttendance,
     myMarkAttendance,
+    activityRecords,
     allMarkAttendance,
 }

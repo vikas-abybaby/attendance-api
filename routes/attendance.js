@@ -9,4 +9,5 @@ const upload = multer();
 router.post('/',upload.none(), authMiddleware, attendanceController.myMarkAttendance);
 router.post('/all',upload.none(), authMiddleware, attendanceController.allMarkAttendance);
 router.post('/mark',upload.none(), authMiddleware, attendanceController.checkMarkAttendance);
+router.post('/activity',upload.none(), authMiddleware, attendanceController.activityRecords);
 module.exports = router;
