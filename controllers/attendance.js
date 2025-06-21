@@ -1,116 +1,245 @@
 const Attendance = require("../models/attendance");
-const User = require('../models/user');
+const User = require("../models/user");
+const TodayAttendance = require("../utils/dateHelper")
 
 
-const checkAttendance = async (req, res) => {
+const checkMarkAttendance = async (req, res) => {
+    const userId = req.user.userId;
+    const today = TodayAttendance.getTodayIST();
+    const currentTime = TodayAttendance.getCurrentISTTime();
+
+    const {location,lat,long} = req.body;
+
     try {
-        const userId = req.user.userId;
-        const user = await User.findById(userId).select('-password');
-
-        if (!user) {
-            return res.status(404).json({
-                message: 'User not found',
-                status_code: 404,
-                data: null
-            });
-        }
-        const today = new Date();
-        const attendance = await Attendance.findOne({ userId, date: today });
-
+        let attendance = await Attendance.findOne({ userId, date: today });
         if (!attendance) {
-            return res.status(200).json({
-                message: "No attendance record for today",
-                status_code: 200,
-                data: {
-                    checkedIn: false,
-                    checkedOut: false
-                }
+            attendance = await Attendance.create({
+                userId,
+                date: today,
+                checkInTime: currentTime || null,
+                checkInLocation: location || null,
+                activityLatLong: [
+                        { 
+                            lat: lat.toString(), 
+                            long: long.toString(), 
+                            time:currentTime,
+                        }
+                    ]
+            });
+
+            return res.status(201).json({
+                message: "Checked in successfully.",
+                status_code: 201,
+                data: attendance
             });
         }
+
+
+        if (attendance.checkInTime && !attendance.checkOutTime) {
+            attendance.checkOutTime = currentTime || null;
+            attendance.checkOutLocation = location || null;
+            attendance.activityLatLong.push({
+                lat: lat.toString(),
+                long: long.toString(),
+                time:currentTime,
+            });
+            await attendance.save();
+
+            return res.status(200).json({
+                message: "Checked out successfully.",
+                status_code: 200,
+                data: attendance
+            });
+        }
+
 
         return res.status(200).json({
-            message: "Attendance record found",
+            message: "You have already checked in and checked out today.",
             status_code: 200,
-            data: {
-                checkedIn: !!attendance.checkIn,
-                checkedOut: !!attendance.checkOut,
-                checkInTime: attendance.checkIn || null,
-                checkOutTime: attendance.checkOut || null
-            }
+            data: attendance
         });
 
     } catch (err) {
-        console.error("Error in checkAttendance:", err);
         return res.status(500).json({
-            message: 'Server error',
+            message: "Server error during attendance check.",
             status_code: 500,
             data: null
         });
     }
 };
 
-
-
-exports.checkIn = async (req, res) => {
-    const userId = req.body.userId;
-    const today = new Date().toISOString().split("T")[0];
-
+const activityRecords = async (req,res) => {
     try {
-        const exists = await Attendance.findOne({ userId, date: today });
-        if (exists) {
-            return res.status(400).json({ message: "Already checked in today." });
-        }
+        const userId = req.user.userId;
+        const today = TodayAttendance.getTodayIST();
+        const time = TodayAttendance.getCurrentISTTime();
+        const { lat = null, long = null } = req.body;
 
-        const newAttendance = await Attendance.create({
-            userId,
-            date: today,
-            checkIn: new Date()
+    if (!lat || !long) {
+        return res.status(400).json({
+        message: 'Latitude and Longitude are required fields',
+        status_code: 400,
+        data: null
+        });
+    }
+    const attendance = await Attendance.findOne({ userId, date: today });
+    if (!attendance) {
+      return res.status(404).json({
+        message: 'Attendance not found for today',
+        status_code: 404,
+      });
+    }
+    attendance.activityLatLong = attendance.activityLatLong || [];
+    attendance.activityLatLong.push({
+      lat: lat.toString(),
+      long: long.toString(),
+      time:time,
+    });
+    await attendance.save();
+        return res.status(200).json({
+            message: 'Location updated successfully',
+            status_code: 200,
+            data: attendance.activityLatLong,
         });
 
-        res.status(201).json({ message: "Checked in", data: newAttendance });
-    } catch (err) {
-        res.status(500).json({ message: "Check-in failed", error: err.message });
-    }
-};
+    } catch (error) {
+        return res.status(500).json({
+            message: "Server error during attendance check.",
+            status_code: 500,
+            data: null
+        });
+    }   
+}
 
-exports.checkOut = async (req, res) => {
-    const userId = req.body.userId;
-    const today = new Date().toISOString().split("T")[0];
 
+const allMarkAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findOne({ userId, date: today });
-        if (!attendance) {
-            return res.status(404).json({ message: "Check-in not found." });
+        const today = TodayAttendance.getTodayIST();
+        const { startDate = today, endDate = today } = req.body || {};
+        const user = await User.findById(req.user.userId).select('-password');
+        let dateFilter = {};
+        let filter = [];
+
+
+        if (startDate && endDate) {
+            dateFilter.date = {
+                $gte: startDate,
+                $lte: endDate
+            };
         }
 
-        if (attendance.checkOut) {
-            return res.status(400).json({ message: "Already checked out." });
+        if (user.role === 'hr') {
+            const employeeIds = await User.find({ role: 'employee' }).select('_id');
+
+            const employeeIdStrings = employeeIds.map(u => u._id.toString());
+            filter = await Attendance.find({
+                userId: { $in: employeeIdStrings },
+                ...dateFilter
+            }).populate('userId', '-password');
+        } else if (user.role === 'manager') {
+            const employeeIds = await User.find({
+                role: { $in: ['employee', 'hr'] }
+            }).select('_id');
+            const employeeIdStrings = employeeIds.map(u => u._id.toString());
+            filter = await Attendance.find({
+                userId: { $in: employeeIdStrings },
+                ...dateFilter
+            }).populate('userId', '-password');
+        } else if (user.role === 'admin') {
+            const employeeIds = await User.find({
+                role: { $in: ['manager', 'employee', 'hr'] }
+            }).select('_id');
+            const employeeIdStrings = employeeIds.map(u => u._id.toString());
+            filter = await Attendance.find({
+                userId: { $in: employeeIdStrings },
+                ...dateFilter
+            }).populate('userId', '-password');
+        } else {
+            filter = [];
+        }
+        const result = filter.map(att => ({
+            ...att.userId?.toObject(),
+            attendance: {
+                _id: att._id,
+                date: att.date,
+                checkInTime: att.checkInTime,
+                checkOutTime: att.checkOutTime,
+                checkInLocation: att.checkInLocation,
+                checkOutLocation: att.checkOutLocation,
+                createdAt: att.createdAt,
+                updatedAt: att.updatedAt,
+            }
+        }));
+
+
+        res.status(200).json({
+            message: 'Attendance fetched successfully',
+            status_code: 200,
+            data: result
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: 'Internal Server Error',
+            status_code: 500,
+            data: null
+        });
+    }
+};
+
+const myMarkAttendance = async (req, res) => {
+    try {
+        const today = TodayAttendance.getTodayIST();
+        const { startDate = today, endDate = today } = req.body || {};
+        const user = await User.findById(req.user.userId).select('-password');
+        let dateFilter = {};
+        if (startDate && endDate) {
+            dateFilter.date = {
+                $gte: startDate,
+                $lte: endDate
+            };
         }
 
-        attendance.checkOut = new Date();
-        await attendance.save();
+        const filter = await Attendance.find({
+            userId: { $in: req.user.userId },
+            ...dateFilter
+        }).populate('userId', '-password');
+        const result = filter.map(att => ({
+            ...att.userId?.toObject(),
+            attendance: {
+                _id: att._id,
+                date: att.date,
+                checkInTime: att.checkInTime,
+                checkOutTime: att.checkOutTime,
+                checkInLocation: att.checkInLocation,
+                checkOutLocation: att.checkOutLocation,
+                createdAt: att.createdAt,
+                updatedAt: att.updatedAt,
+            }
+        }));
 
-        res.status(200).json({ message: "Checked out", data: attendance });
-    } catch (err) {
-        res.status(500).json({ message: "Check-out failed", error: err.message });
-    }
-};
 
-exports.getUserAttendance = async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const data = await Attendance.find({ userId }).sort({ date: -1 });
-        res.status(200).json({ data });
-    } catch (err) {
-        res.status(500).json({ message: "Fetch error", error: err.message });
-    }
-};
+        res.status(200).json({
+            message: 'Attendance fetched successfully',
+            status_code: 200,
+            data: result
+        });
 
-exports.getAll = async (req, res) => {
-    try {
-        const records = await Attendance.find().populate("userId", "name email");
-        res.status(200).json({ data: records });
-    } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+
+    } catch (error) {
+        res.status(500).json({
+            message: 'Internal Server Error',
+            status_code: 500,
+            data: null
+        });
     }
-};
+}
+
+
+module.exports = {
+    checkMarkAttendance,
+    myMarkAttendance,
+    activityRecords,
+    allMarkAttendance,
+}
