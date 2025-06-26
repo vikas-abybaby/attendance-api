@@ -1,5 +1,6 @@
 const Attendance = require("../models/attendance");
 const User = require("../models/user");
+const Leave = require("../models/leave");
 const TodayAttendance = require("../utils/dateHelper")
 
 
@@ -8,7 +9,7 @@ const checkMarkAttendance = async (req, res) => {
     const today = TodayAttendance.getTodayIST();
     const currentTime = TodayAttendance.getCurrentISTTime();
 
-    const {location,lat,long} = req.body;
+    const { location, lat, long } = req.body;
 
     try {
         let attendance = await Attendance.findOne({ userId, date: today });
@@ -19,12 +20,12 @@ const checkMarkAttendance = async (req, res) => {
                 checkInTime: currentTime || null,
                 checkInLocation: location || null,
                 activityLatLong: [
-                        { 
-                            lat: lat.toString(), 
-                            long: long.toString(), 
-                            time:currentTime,
-                        }
-                    ]
+                    {
+                        lat: lat.toString(),
+                        long: long.toString(),
+                        time: currentTime,
+                    }
+                ]
             });
 
             return res.status(201).json({
@@ -41,7 +42,7 @@ const checkMarkAttendance = async (req, res) => {
             attendance.activityLatLong.push({
                 lat: lat.toString(),
                 long: long.toString(),
-                time:currentTime,
+                time: currentTime,
             });
             await attendance.save();
 
@@ -68,34 +69,34 @@ const checkMarkAttendance = async (req, res) => {
     }
 };
 
-const activityRecords = async (req,res) => {
+const activityRecords = async (req, res) => {
     try {
         const userId = req.user.userId;
         const today = TodayAttendance.getTodayIST();
         const time = TodayAttendance.getCurrentISTTime();
         const { lat = null, long = null } = req.body;
 
-    if (!lat || !long) {
-        return res.status(400).json({
-        message: 'Latitude and Longitude are required fields',
-        status_code: 400,
-        data: null
+        if (!lat || !long) {
+            return res.status(400).json({
+                message: 'Latitude and Longitude are required fields',
+                status_code: 400,
+                data: null
+            });
+        }
+        const attendance = await Attendance.findOne({ userId, date: today });
+        if (!attendance) {
+            return res.status(404).json({
+                message: 'Attendance not found for today',
+                status_code: 404,
+            });
+        }
+        attendance.activityLatLong = attendance.activityLatLong || [];
+        attendance.activityLatLong.push({
+            lat: lat.toString(),
+            long: long.toString(),
+            time: time,
         });
-    }
-    const attendance = await Attendance.findOne({ userId, date: today });
-    if (!attendance) {
-      return res.status(404).json({
-        message: 'Attendance not found for today',
-        status_code: 404,
-      });
-    }
-    attendance.activityLatLong = attendance.activityLatLong || [];
-    attendance.activityLatLong.push({
-      lat: lat.toString(),
-      long: long.toString(),
-      time:time,
-    });
-    await attendance.save();
+        await attendance.save();
         return res.status(200).json({
             message: 'Location updated successfully',
             status_code: 200,
@@ -108,7 +109,7 @@ const activityRecords = async (req,res) => {
             status_code: 500,
             data: null
         });
-    }   
+    }
 }
 
 
@@ -192,7 +193,6 @@ const myMarkAttendance = async (req, res) => {
     try {
         const today = TodayAttendance.getTodayIST();
         const { startDate = today, endDate = today } = req.body || {};
-        const user = await User.findById(req.user.userId).select('-password');
         let dateFilter = {};
         if (startDate && endDate) {
             dateFilter.date = {
@@ -235,11 +235,69 @@ const myMarkAttendance = async (req, res) => {
         });
     }
 }
+const allAttendanceCount = async (req, res) => {
 
+    try {
+        const today = TodayAttendance.getTodayIST();
+        const userId = req.user.userId;
+        const { startDate = today, endDate = today } = req.body || {};
+        let dateFilter = {};
+        const user = await User.findById(userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ status: false, message: "User not found" });
+        }
+
+        if (startDate && endDate) {
+            dateFilter.date = {
+                $gte: startDate,
+                $lte: endDate
+            };
+        }
+
+        const attendanceCount = await Attendance.countDocuments({
+            userId: req.user.userId,
+            ...dateFilter,
+        });
+        const attendanceLateCount = await Attendance.countDocuments({
+            userId: userId,
+            ...dateFilter,
+            late: 1
+        });
+        const leave = await Leave.countDocuments({
+            userId: userId,
+            ...dateFilter
+        });
+        return res.status(200).json({
+            status: true,
+            message: "Attendance count fetched successfully",
+            data: [
+                {
+                    "count": attendanceCount,
+                    "name": "Attendance"
+                },
+                {
+                    "count": attendanceLateCount,
+                    "name": "Late "
+                },
+                {
+                    "count": leave,
+                    "name": "Leave "
+                }
+            ],
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: "Internal Server Error",
+        });
+    }
+
+}
 
 module.exports = {
     checkMarkAttendance,
     myMarkAttendance,
     activityRecords,
     allMarkAttendance,
+    allAttendanceCount,
 }

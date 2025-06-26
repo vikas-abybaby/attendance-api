@@ -93,7 +93,10 @@ const userLogin = async (req, res) => {
 
     try {
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({
+            email,
+            isActive: true
+        });
         if (!user) {
             return res.status(401).json({
                 message: 'Invalid email credentials',
@@ -144,7 +147,10 @@ const userLogin = async (req, res) => {
 
 const userProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select('-password');
+        const user = await User.findOne({
+            _id: req.user.userId,
+            isActive: true
+        }).select('-password');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found', status_code: 404, data: null });
@@ -160,7 +166,7 @@ const userProfile = async (req, res) => {
     }
 };
 
-const userBirthday = async (req, res) => {
+const userCalebration = async (req, res) => {
     try {
         const today = new Date();
         const currentDay = today.getDate();
@@ -169,7 +175,7 @@ const userBirthday = async (req, res) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
 
-        const users = await User.aggregate([
+        const birthday = await User.aggregate([
             {
                 $addFields: {
                     dobDay: { $dayOfMonth: { date: "$dob", timezone: "Asia/Kolkata" } },
@@ -235,33 +241,7 @@ const userBirthday = async (req, res) => {
                 }
             }
         ]);
-
-        return res.status(200).json({
-            message: "All users, with today's birthdays on top",
-            status_code: 200,
-            data: users
-        });
-
-    } catch (err) {
-        console.error("Error fetching birthdays:", err);
-        return res.status(500).json({
-            message: 'Server error',
-            status_code: 500,
-            data: null
-        });
-    }
-};
-
-
-const userAnniversary = async (req, res) => {
-    try {
-        const today = new Date();
-        const currentDay = today.getDate();
-        const currentMonth = today.getMonth() + 1;
-
-        const currentYear = today.getFullYear();
-
-        const users = await User.aggregate([
+        const anniversary = await User.aggregate([
             {
                 $addFields: {
                     joinDay: { $dayOfMonth: { date: "$joiningDate", timezone: "Asia/Kolkata" } },
@@ -327,15 +307,18 @@ const userAnniversary = async (req, res) => {
                 }
             }
         ]);
-
         return res.status(200).json({
-            message: "All users, with today's anniversaries on top",
+            message: "All users Calebrations",
             status_code: 200,
-            data: users
+            data: {
+                "birthday": birthday,
+                "anniversary": anniversary,
+
+            }
         });
 
     } catch (err) {
-        console.error("Error fetching anniversaries:", err);
+        console.error("Error fetching birthdays:", err);
         return res.status(500).json({
             message: 'Server error',
             status_code: 500,
@@ -353,12 +336,13 @@ const userAnniversary = async (req, res) => {
 
 
 
+
+
 module.exports = {
     createUser,
     getAllUsers,
     updateUserById,
     userLogin,
     userProfile,
-    userBirthday,
-    userAnniversary,
+    userCalebration,
 }
