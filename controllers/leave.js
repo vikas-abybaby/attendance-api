@@ -1,4 +1,4 @@
-const Leave = require('../models/Leave');
+const Leave = require('../models/leave');
 const User = require('../models/user');
 const TodayAttendance = require('../utils/dateHelper')
 
@@ -150,7 +150,7 @@ const myLeave = async (req, res) => {
         const filter = await Leave.find({
             userId: { $in: req.user.userId },
             ...dateFilter
-        }).populate('userId', '-password');
+        });
         const result = filter.map(att => ({
             ...att.userId?.toObject(),
             leave: {
