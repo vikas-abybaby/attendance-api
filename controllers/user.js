@@ -46,7 +46,7 @@ const createUser = async (req, res) => {
         res.status(201).json({ message: 'User registered successfully', status_code: 201, data: newUser });
 
     } catch (err) {
-        res.status(500).json({ message: 'Server error', status_code: 500, data: null });
+        res.status(500).json({ message: 'Server error', err, status_code: 500, data: null });
     }
 };
 
@@ -157,7 +157,7 @@ const userProfile = async (req, res) => {
         }
 
         res.status(200).json({
-            message: 'Profile data',
+            message: null,
             status_code: 200,
             data: user
         });

@@ -10,10 +10,12 @@ const upload = multer();
 
 router.get('/', authMiddleware, userController.getAllUsers);
 router.post('/login', upload.none(), userController.userLogin);
-router.post('/add', upload.none(), authMiddleware, userController.createUser);
+router.post('/add', upload.none(), userController.createUser);
 router.post('/edit', upload.none(), authMiddleware, userController.updateUserById);
 router.get('/profile', upload.none(), authMiddleware, userController.userProfile);
-router.get('/calebrations',upload.none(),  authMiddleware, userController.userCalebration);
+router.get('/birthdays', upload.none(), authMiddleware, userController.userBirthday);
+router.get('/anniversarys', upload.none(), authMiddleware, userController.userAnniversary);
+router.get('/calebrations', upload.none(), authMiddleware, userController.userCalebration);
 
 module.exports = router;
 
