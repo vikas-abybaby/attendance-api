@@ -14,10 +14,14 @@ const attendanceSchema = new mongoose.Schema({
         type: String,
         default: null,
     }, 
+    late: {
+        type: Boolean,
+        default: true,
+    },
     checkInLocation: {
         type: String,
         default: null,
-    }, 
+    },
     checkOutLocation: {
         type: String,
         default: null,
@@ -31,7 +35,7 @@ const attendanceSchema = new mongoose.Schema({
             {
                 lat: { type: String, required: true },
                 long: { type: String, required: true },
-                time: { type: String ,required: true },
+                time: { type: String, required: true },
             }
         ],
         default: []
