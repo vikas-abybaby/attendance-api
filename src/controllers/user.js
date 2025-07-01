@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const { allUserServices } = require('../services');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const auth = require('../middlewares/user');
@@ -52,8 +53,11 @@ const createUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({});
-        res.status(200).json({ message: 'All User', status_code: 200, data: users });
+        // const loginUsers = await allUserServices.getUserById(req.user.userId);
+        // console.log(loginUsers);
+
+        const users = await allUserServices.getAllUsers();
+        res.status(200).json({ message: 'All Active User', status_code: 200, data: users });
     } catch (error) {
         res.status(500).json({ message: 'Internal Server Error' });
     }
