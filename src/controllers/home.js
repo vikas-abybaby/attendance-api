@@ -1,12 +1,10 @@
-const User = require('../models/user'); // Ensure User model is imported
+const User = require('../models/user');
 
 const getHome = async (req, res) => {
     try {
         const users = await User.find({});
 
         const totalUsers = users.length;
-
-        // Optionally filter for today's attendance, birthdays, work anniversaries
         const today = new Date();
         const todayMonth = today.getMonth();
         const todayDate = today.getDate();
@@ -20,8 +18,6 @@ const getHome = async (req, res) => {
             const createdAt = new Date(user.createdAt);
             return createdAt.getDate() === todayDate && createdAt.getMonth() === todayMonth;
         }).length;
-
-        // You can replace this with actual attendance logic if you have one
         const totalAttendanceToday = 8;
 
         return res.status(200).json({

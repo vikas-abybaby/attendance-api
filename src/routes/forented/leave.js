@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const leaveController = require('../../controllers/leave');
+const authMiddleware = require('../../middlewares/user');
+const upload = multer();
+router.post('/', upload.none(), authMiddleware, leaveController.myLeave);
+router.post('/all', upload.none(), authMiddleware, leaveController.allLeave);
+router.post('/add', upload.none(), authMiddleware, leaveController.addLeave);
+module.exports = router;
