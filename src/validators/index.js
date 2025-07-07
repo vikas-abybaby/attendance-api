@@ -1,5 +1,3 @@
-const validateLogin = require('./loginValidator');
+import validateLogin from './login_validator.js';
 
-module.exports = {
-    validateLogin,
-}
+export default validateLogin;

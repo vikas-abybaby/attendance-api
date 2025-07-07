@@ -1,7 +1,4 @@
-const admin = require('./admin');
-const user = require('./forented');
+import admin from './admin/index.js';
+import v1 from './forented/index.js';
 
-module.exports = {
-  admin,
-  user
-};
+export { admin, v1 };

@@ -1,11 +1,10 @@
+import express from 'express';
+import multer from 'multer';
+import controllers from '../../../controllers/index.js';
 
-const userController = require('../../../controllers/user')
-const express = require('express');
-const multer = require('multer');
 const router = express.Router();
 const upload = multer();
 
+router.post('/edit', upload.none(), controllers.userControllers.userEdit);
 
-router.post('/', upload.none(), userController.updateUserById);
-
-module.exports = router;
+export default router;

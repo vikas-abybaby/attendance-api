@@ -1,7 +1,7 @@
-const express = require('express');
-const multer = require('multer');
+import express from 'express';
+import multer from 'multer';
+
 const router = express.Router();
 const upload = multer();
 
-
-module.exports = router;
+export default router;

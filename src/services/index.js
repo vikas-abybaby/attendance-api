@@ -1,6 +1,3 @@
-const allUserServices = require('./users/get_all_users_services');
+import userServices from './users/user.js';
 
-
-module.exports = {
-    allUserServices,
-}
+export default userServices ;
