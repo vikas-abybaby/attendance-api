@@ -4,6 +4,6 @@ import express from 'express';
 const router = express.Router();
 
 
-router.get('/calebration', middlewares.accessValidator, controllers.userControllers.userCalebration);
+router.get('/calebration', middlewares.authMiddleware, controllers.userControllers.userCalebration);
 
 export default router;

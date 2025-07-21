@@ -3,7 +3,7 @@ import Services from "../../services/index.js";
 
 export const userProfile = async (req, res) => {
     try {
-        const user = Services.getActiveUserById(req.user.userId);
+        const user = await Services.getActiveUserById(req.user.userId);
 
         if (!user) {
             return res.status(404).json({

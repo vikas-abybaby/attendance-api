@@ -4,70 +4,7 @@ const Leave = require("../models/leave");
 const TodayAttendance = require("../utils/dateHelper")
 
 
-const checkMarkAttendance = async (req, res) => {
-    const userId = req.user.userId;
-    const today = TodayAttendance.getTodayIST();
-    const currentTime = TodayAttendance.getCurrentISTTime();
 
-    const { location, lat, long } = req.body;
-
-    try {
-        let attendance = await Attendance.findOne({ userId, date: today });
-        if (!attendance) {
-            attendance = await Attendance.create({
-                userId,
-                date: today,
-                checkInTime: currentTime || null,
-                checkInLocation: location || null,
-                activityLatLong: [
-                    {
-                        lat: lat.toString(),
-                        long: long.toString(),
-                        time: currentTime,
-                    }
-                ]
-            });
-
-            return res.status(201).json({
-                message: "Checked in successfully.",
-                status_code: 201,
-                data: attendance
-            });
-        }
-
-
-        if (attendance.checkInTime && !attendance.checkOutTime) {
-            attendance.checkOutTime = currentTime || null;
-            attendance.checkOutLocation = location || null;
-            attendance.activityLatLong.push({
-                lat: lat.toString(),
-                long: long.toString(),
-                time: currentTime,
-            });
-            await attendance.save();
-
-            return res.status(200).json({
-                message: "Checked out successfully.",
-                status_code: 200,
-                data: attendance
-            });
-        }
-
-
-        return res.status(200).json({
-            message: "You have already checked in and checked out today.",
-            status_code: 200,
-            data: attendance
-        });
-
-    } catch (err) {
-        return res.status(500).json({
-            message: "Server error during attendance check.",
-            status_code: 500,
-            data: null
-        });
-    }
-};
 
 const activityRecords = async (req, res) => {
     try {
@@ -295,7 +232,6 @@ const allAttendanceCount = async (req, res) => {
 }
 
 module.exports = {
-    checkMarkAttendance,
     myMarkAttendance,
     activityRecords,
     allMarkAttendance,

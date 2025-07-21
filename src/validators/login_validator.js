@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const loginSchema = Joi.object({
+export const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     'string.email': 'Email must be a valid email address',
     'any.required': 'Email is required',
@@ -10,4 +10,3 @@ const loginSchema = Joi.object({
     'any.required': 'Password is required',
   }),
 });
-export default loginSchema;

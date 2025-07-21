@@ -10,7 +10,7 @@ export const userAdd = async (req, res) => {
     }
 
     try {
-        const existingUser = await Services.getUserByEmail(email);
+        const existingUser = await Services.userServices.getUserByEmail(email);
         if (existingUser) {
             return res.status(400).json({ message: 'Email already exists' });
         }
