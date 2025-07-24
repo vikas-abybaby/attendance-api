@@ -1,3 +1,4 @@
-import validateLogin from './login_validator.js';
+import { loginSchema } from './login_validator.js';
+import { attendanceSchema } from './attendanceValidation.js';
 
-export default validateLogin;
+export default { loginSchema, attendanceSchema };

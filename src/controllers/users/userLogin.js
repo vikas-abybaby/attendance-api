@@ -1,4 +1,4 @@
-import Services from "../../services/index.js";
+import services from "../../services/index.js";
 import Helper from '../../utils/index.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -8,7 +8,7 @@ export const userLogin = async (req, res) => {
     const { email, password } = req.body;
     const currentDate = Helper.getTodayIST();
     try {
-        const user = await Services.getUserByEmail(email);
+        const user = await services.userServices.getUserByEmail(email);
         if (!user) {
             return res.status(401).json({
                 message: 'Invalid email credentials',
@@ -50,7 +50,7 @@ export const userLogin = async (req, res) => {
         });
     } catch (err) {
         return res.status(500).json({
-            message: 'Internal server error',
+            message: 'Internal server error'+err,
             status_code: 500,
             data: null,
         });

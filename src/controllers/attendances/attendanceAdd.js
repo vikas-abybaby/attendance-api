@@ -1,28 +1,22 @@
 
-import Helper from '../../utils/index.js';
-import Services from '../../services/index.js'
 
-export const attendanceAdd = async (req, res) => {
-    const { currentDay, currentMonth, currentYear } = Helper.getISTDateParts();
-    const userId = req.user.userId;
-    const currentTime = Helper.getCurrentISTTime();
-    const { location, lat, long } = req.body;
+import services from '../../services/index.js';
+
+
+export const attendanceMark = async (req, res) => {
 
     try {
-        const attendance = await Services.todayAttendance(userId, currentDay);
+        const userId = req.user.userId;
+        const { lat, long, location } = req.body;
+
+        let attendance = await services.attendancesServices.attendanceByUserId(userId);
         if (!attendance) {
-            attendance = await Attendance.create({
+            attendance = await services.attendancesServices.createAttendance({
                 userId,
-                date: today,
-                checkInTime: currentTime || null,
-                checkInLocation: location || null,
-                activityLatLong: [
-                    {
-                        lat: lat.toString(),
-                        long: long.toString(),
-                        time: currentTime,
-                    }
-                ]
+                lat,
+                long,
+                location,
+
             });
 
             return res.status(201).json({
@@ -33,15 +27,17 @@ export const attendanceAdd = async (req, res) => {
         }
 
 
+
         if (attendance.checkInTime && !attendance.checkOutTime) {
-            attendance.checkOutTime = currentTime || null;
-            attendance.checkOutLocation = location || null;
-            attendance.activityLatLong.push({
-                lat: lat.toString(),
-                long: long.toString(),
-                time: currentTime,
-            });
-            await attendance.save();
+            attendance = await services.attendancesServices.updateAttendanceCheckout(
+                {
+                    userId,
+                    lat,
+                    long,
+                    location,
+                }
+            );
+
 
             return res.status(200).json({
                 message: "Checked out successfully.",
@@ -50,18 +46,19 @@ export const attendanceAdd = async (req, res) => {
             });
         }
 
-
         return res.status(200).json({
             message: "You have already checked in and checked out today.",
             status_code: 200,
             data: attendance
         });
 
-    } catch (err) {
+    } catch (error) {
         return res.status(500).json({
-            message: "Server error during attendance check.",
+            message: "Server error during attendance check." + error,
+
             status_code: 500,
             data: null
         });
     }
 }
+

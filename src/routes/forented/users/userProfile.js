@@ -6,6 +6,11 @@ import authMiddleware from '../../../middlewares/index.js';
 const router = express.Router();
 const upload = multer();
 
-router.get('/users', upload.none(), authMiddleware.accessValidator, controllers.userControllers.userGet);
+router.get(
+    '/profile',
+    upload.none(),
+    authMiddleware.authMiddleware,
+    controllers.userControllers.userProfile,
+);
 
 export default router;

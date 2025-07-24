@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
 const attendanceSchema = new mongoose.Schema({
     userId: {
@@ -13,7 +13,7 @@ const attendanceSchema = new mongoose.Schema({
     checkInTime: {
         type: String,
         default: null,
-    }, 
+    },
     late: {
         type: Boolean,
         default: true,
@@ -44,4 +44,4 @@ const attendanceSchema = new mongoose.Schema({
 
 attendanceSchema.index({ userId: 1, date: 1 }, { unique: true });
 
-module.exports = mongoose.model("Attendance", attendanceSchema);
+export default mongoose.model("Attendance", attendanceSchema);
