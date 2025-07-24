@@ -26,6 +26,7 @@ export const userAdd = async (req, res) => {
             phone: req.body.phone,
             address: req.body.address,
             department: req.body.department,
+            designation: req.body.designation,
             employeeId: req.body.employeeId,
             createdBy: req.body.createdBy || null,
             reportingTo: req.body.reportingTo || null,
@@ -39,7 +40,7 @@ export const userAdd = async (req, res) => {
             data: newUser,
         });
     } catch (err) {
-        res.status(500).json({ message: 'Server error', status_code: 500, data: null });
+        res.status(500).json({ message: 'Server error' + err, status_code: 500, data: null });
     }
 };
 
