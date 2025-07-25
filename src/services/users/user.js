@@ -15,9 +15,7 @@ const getActiveUserById = async (userId) => {
     isActive: true,
   }).select('-password');
 };
-const todayAttendance = async (userId, todayDate) => {
-  return await Attendance.findOne({ userId, date: todayDate });
-};
+
 
 
 const getUsersSortedByBirthday = async () => {
@@ -169,7 +167,6 @@ export default {
   getAllUsers,
   getUserByEmail,
   getActiveUserById,
-  todayAttendance,
   getUsersSortedByBirthday,
   getUsersSortedByAnniversary,
 };
