@@ -7,7 +7,7 @@ const router = express.Router();
 const upload = multer();
 
 router.post(
-    '/users-login',
+    '/login',
     upload.none(),
     controllers.userControllers.userLogin,
 );

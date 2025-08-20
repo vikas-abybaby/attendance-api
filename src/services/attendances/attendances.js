@@ -61,11 +61,21 @@ const getAttendancesByUserIdsAndDate = async (userIds, dateFilter) => {
         ...dateFilter,
     }).populate('userId', '-password');
 };
+const getAttendanceWithUsers = async ({ userIds = [], dateFilter = {} }) => {
+    const query = {
+        ...(userIds.length ? { userId: { $in: userIds } } : {}),
+        ...dateFilter,
+    };
 
+    return await Attendance.find(query)
+        .populate('userId', '-password')
+        .lean();
+};
 
 export default {
     attendanceByUserId,
     createAttendance,
     updateAttendanceCheckout,
-    getAttendancesByUserIdsAndDate,
+    getAttendancesByUserIdsAndDate, 
+    getAttendanceWithUsers,
 };

@@ -1,7 +1,8 @@
 import { attendanceMark } from './attendanceAdd.js';
-import { attendanceGet } from './attendanceGet.js';
+import { attendanceMy } from './attendanceMy.js';
+import { attendanceAll } from './attendanceAll.js';
 
 
 
 
-export default { attendanceMark, attendanceGet };
+export default { attendanceMark, attendanceMy, attendanceAll };
