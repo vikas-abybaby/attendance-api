@@ -29,6 +29,14 @@ const Attendance = sequelize.define(
             type: DataTypes.STRING,
             defaultValue: null,
         },
+        checkIn: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        }, 
+        checkOut: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
 
         late: {
             type: DataTypes.BOOLEAN,

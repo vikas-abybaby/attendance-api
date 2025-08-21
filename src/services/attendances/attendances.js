@@ -1,9 +1,9 @@
 import Attendance from '../../models/attendance.js';
-import Helper from '../../utils/index.js'; // Assuming you have getISTDateParts() in here
+import Helper from '../../utils/index.js';
+import Services from './activityService.js';
 
 const attendanceByUserId = async (userId,) => {
-    const { currentDay, currentMonth, currentYear } = Helper.getISTDateParts();
-    const today = new Date(currentYear, currentMonth - 1, currentDay);
+    const today = Helper.getTodayIST();
     return await Attendance.findOne({
         userId,
         date: today,
@@ -17,6 +17,7 @@ const createAttendance = async ({ userId, lat, long, location }) => {
         userId,
         date: formattedDate,
         checkInTime: currentTime || null,
+        checkIn: true,
         checkInLocation: location || null,
         activityLatLong: [
             {
@@ -29,28 +30,21 @@ const createAttendance = async ({ userId, lat, long, location }) => {
 };
 
 
-const updateAttendanceCheckout = async ({ userId, lat, long, location }) => {
-
-    const { currentDay, currentMonth, currentYear } = Helper.getISTDateParts();
+const updateAttendanceCheckout = async ({ id, lat, long, location }) => {
     const currentTime = Helper.getCurrentISTTime();
-    const today = new Date(currentYear, currentMonth - 1, currentDay);
 
-    const attendance = await Attendance.findOne({ userId, date: today });
+    const attendance = await Attendance.findOne({ where: { id } });
 
     if (!attendance) {
         throw new Error('Attendance record not found for check-out.');
     }
 
-    attendance.checkOutTime = currentTime || null;
+    attendance.checkOutTime = currentTime;
+    attendance.checkOut = true;
     attendance.checkOutLocation = location || null;
-
-    attendance.activityLatLong.push({
-        lat: lat?.toString(),
-        long: long?.toString(),
-        time: currentTime,
-    });
-
+    attendance.activityLatLong = await Services.addActivityLog(attendance.activityLatLong, { lat: lat?.toString(), long: long?.toString(), time: currentTime });
     await attendance.save();
+
     return attendance;
 };
 
@@ -76,6 +70,6 @@ export default {
     attendanceByUserId,
     createAttendance,
     updateAttendanceCheckout,
-    getAttendancesByUserIdsAndDate, 
+    getAttendancesByUserIdsAndDate,
     getAttendanceWithUsers,
 };

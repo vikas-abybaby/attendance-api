@@ -8,7 +8,6 @@ export const attendanceMark = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { lat, long, location } = req.body;
-
         let attendance = await services.attendancesServices.attendanceByUserId(userId);
         if (!attendance) {
             attendance = await services.attendancesServices.createAttendance({
@@ -28,10 +27,10 @@ export const attendanceMark = async (req, res) => {
 
 
 
-        if (attendance.checkInTime && !attendance.checkOutTime) {
+        if (attendance.checkIn && !attendance.checkOut) {
             attendance = await services.attendancesServices.updateAttendanceCheckout(
                 {
-                    userId,
+                    id: attendance.id,
                     lat,
                     long,
                     location,
