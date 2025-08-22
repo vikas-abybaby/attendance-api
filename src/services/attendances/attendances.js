@@ -1,13 +1,18 @@
 import Attendance from '../../models/attendance.js';
 import Helper from '../../utils/index.js';
 import Services from './activityService.js';
+import { Op } from "sequelize";
 
 const attendanceByUserId = async (userId,) => {
-    const today = Helper.getTodayIST();
+    const today = Helper.getTodayDate();
     return await Attendance.findOne({
-        userId,
-        date: today,
+        where: {
+            userId: userId,
+            date: today
+        }
     });
+
+
 };
 
 const createAttendance = async ({ userId, lat, long, location }) => {
@@ -66,9 +71,54 @@ const getAttendanceWithUsers = async ({ userIds = [], dateFilter = {} }) => {
         .lean();
 };
 
+const getAttendanceWithMonth = async (userId) => {
+    const endOfMonth = Helper.getTodayDate();
+    const modifyDate = endOfMonth.split("-")
+    modifyDate[modifyDate.length - 1] = '01';    //  = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth() + 1).padStart(2, "0")}-01`;
+    const startOfMonth = modifyDate.join("-")
+
+    const attendance = await Attendance.findAll({
+        where: {
+            userId: userId,
+            checkIn: true,
+            date: {
+                [Op.between]: [startOfMonth, endOfMonth]
+            }
+        }
+    });
+    
+
+
+    return attendance;
+}
+
+const getLateAttendanceWithMonth = async (userId) => {
+    const endOfMonth = Helper.getTodayDate();
+    const modifyDate = endOfMonth.split("-")
+    modifyDate[modifyDate.length - 1] = '01';    //  = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth() + 1).padStart(2, "0")}-01`;
+    const startOfMonth = modifyDate.join("-")
+
+
+    const attendance = await Attendance.findAll({
+        where: {
+            userId: userId,
+            checkIn: true,
+            late: true,
+            date: {
+                [Op.between]: [startOfMonth, endOfMonth]
+            }
+        }
+    });
+
+
+    return attendance;
+}
+
 export default {
     attendanceByUserId,
     createAttendance,
+    getAttendanceWithMonth,
+    getLateAttendanceWithMonth,
     updateAttendanceCheckout,
     getAttendancesByUserIdsAndDate,
     getAttendanceWithUsers,

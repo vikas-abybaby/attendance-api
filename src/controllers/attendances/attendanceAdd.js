@@ -9,6 +9,7 @@ export const attendanceMark = async (req, res) => {
         const userId = req.user.userId;
         const { lat, long, location } = req.body;
         let attendance = await services.attendancesServices.attendanceByUserId(userId);
+        
         if (!attendance) {
             attendance = await services.attendancesServices.createAttendance({
                 userId,

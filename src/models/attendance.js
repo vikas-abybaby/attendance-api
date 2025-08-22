@@ -21,8 +21,9 @@ const Attendance = sequelize.define(
         },
 
         date: {
-            type: DataTypes.STRING,
+            type: DataTypes.DATEONLY,
             allowNull: false,
+            defaultValue: DataTypes.DATEONLY
         },
 
         checkInTime: {
