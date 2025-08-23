@@ -13,4 +13,7 @@ export const attendanceSchema = Joi.object({
     'number.base': 'Longitude must be a number.',
     'any.required': 'Longitude is required.',
   }),
+  absent: Joi.number().optional().messages({
+    'number.base': 'Absent must be a number.',
+  }),
 });

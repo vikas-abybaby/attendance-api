@@ -30,11 +30,24 @@ const Attendance = sequelize.define(
             type: DataTypes.STRING,
             defaultValue: null,
         },
+        checkOutTime: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+        absentTime: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+
         checkIn: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
-        }, 
+        },
         checkOut: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        absent: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
@@ -53,11 +66,12 @@ const Attendance = sequelize.define(
             type: DataTypes.STRING,
             defaultValue: null,
         },
-
-        checkOutTime: {
+        absentLocation: {
             type: DataTypes.STRING,
             defaultValue: null,
         },
+
+
 
 
         activityLatLong: {

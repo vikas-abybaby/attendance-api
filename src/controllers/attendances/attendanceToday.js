@@ -11,37 +11,41 @@ export const attendanceToday = async (req, res) => {
         const todayAttendance = {
             "checkInTime": null,
             "checkIn": false,
+            "absent": false,
             "late": null,
             "checkOutTime": null,
             "checkOut": false,
-            "month_present": 0,
+            "month_without_late": 0,
             "month_late": 0,
             "month_absent": 0
 
         }
+
+
+        const withoutLateattendanceMonth = await services.attendancesServices.getAttendanceWithoutLate(userId);
+        const lateAttendanceMonth = await services.attendancesServices.getLateAttendanceWithMonth(userId);
+        todayAttendance.month_without_late = withoutLateattendanceMonth.length;
+        todayAttendance.month_late = lateAttendanceMonth.length;
         const attendance = await services.attendancesServices.attendanceByUserId(userId);
-
-
 
         if (!attendance) {
             return res.status(200).json({
-                message: "No attendance record found for today.",
+                message: "",
                 status_code: 200,
                 data: todayAttendance
             });
         }
-        const attendanceMonth = await services.attendancesServices.getAttendanceWithMonth(userId);
-        const lateAttendanceMonth = await services.attendancesServices.getLateAttendanceWithMonth(userId);
+
 
 
 
         todayAttendance.checkInTime = attendance.checkInTime;
         todayAttendance.checkIn = attendance.checkIn;
+        todayAttendance.absent = attendance.absent;
         todayAttendance.late = attendance.late;
         todayAttendance.checkOutTime = attendance.checkOutTime;
         todayAttendance.checkOut = attendance.checkOut;
-        todayAttendance.month_present = attendanceMonth.length;
-        todayAttendance.month_late = lateAttendanceMonth.length;
+
 
 
 

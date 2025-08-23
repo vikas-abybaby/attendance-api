@@ -15,15 +15,21 @@ const attendanceByUserId = async (userId,) => {
 
 };
 
-const createAttendance = async ({ userId, lat, long, location }) => {
+const createAttendance = async ({ userId, lat, long, location, absent = 0 }) => {
     const currentTime = Helper.getCurrentISTTime();
     const formattedDate = Helper.getTodayDate();
+    console.log("createAttendance" + userId, lat, long, location, absent);
+
+
     return await Attendance.create({
         userId,
         date: formattedDate,
-        checkInTime: currentTime || null,
-        checkIn: true,
-        checkInLocation: location || null,
+        checkInTime: absent == 0 ? (currentTime || null) : null,
+        checkIn: absent == 0 ? true : false,
+        checkInLocation: absent == 0 ? (location || null) : null,
+        absent: absent == 1 ? true : false,
+        absentTime: absent == 1 ? (currentTime || null) : null,
+        absentLocation: absent == 1 ? (location || null) : null,
         activityLatLong: [
             {
                 lat: lat?.toString(),
@@ -31,7 +37,14 @@ const createAttendance = async ({ userId, lat, long, location }) => {
                 time: currentTime,
             },
         ],
+
+
+
+
     });
+
+
+
 };
 
 
@@ -71,7 +84,7 @@ const getAttendanceWithUsers = async ({ userIds = [], dateFilter = {} }) => {
         .lean();
 };
 
-const getAttendanceWithMonth = async (userId) => {
+const getAttendanceWithoutLate = async (userId) => {
     const endOfMonth = Helper.getTodayDate();
     const modifyDate = endOfMonth.split("-")
     modifyDate[modifyDate.length - 1] = '01';    //  = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth() + 1).padStart(2, "0")}-01`;
@@ -81,12 +94,13 @@ const getAttendanceWithMonth = async (userId) => {
         where: {
             userId: userId,
             checkIn: true,
+            late: false,
             date: {
                 [Op.between]: [startOfMonth, endOfMonth]
             }
         }
     });
-    
+
 
 
     return attendance;
@@ -117,7 +131,7 @@ const getLateAttendanceWithMonth = async (userId) => {
 export default {
     attendanceByUserId,
     createAttendance,
-    getAttendanceWithMonth,
+    getAttendanceWithoutLate,
     getLateAttendanceWithMonth,
     updateAttendanceCheckout,
     getAttendancesByUserIdsAndDate,

@@ -7,17 +7,20 @@ export const attendanceMark = async (req, res) => {
 
     try {
         const userId = req.user.userId;
-        const { lat, long, location } = req.body;
+        const { lat, long, location, absent = 0 } = req.body;
         let attendance = await services.attendancesServices.attendanceByUserId(userId);
-        
+
         if (!attendance) {
+
+
             attendance = await services.attendancesServices.createAttendance({
                 userId,
                 lat,
                 long,
                 location,
-
+                absent
             });
+
 
             return res.status(201).json({
                 message: "Checked in successfully.",
