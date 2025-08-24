@@ -1,47 +1,97 @@
-import mongoose from 'mongoose';
+import { DataTypes } from "sequelize";
+import sequelize from "../config/connection.js";
+import User from "./user.js";
 
-const attendanceSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
+const Attendance = sequelize.define(
+    "Attendance",
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: User,
+                key: "id",
+            },
+        },
+
+        date: {
+            type: DataTypes.DATEONLY,
+            allowNull: false,
+            defaultValue: DataTypes.DATEONLY
+        },
+
+        checkInTime: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+        checkOutTime: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+        absentTime: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+
+        checkIn: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        checkOut: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        absent: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+
+        late: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+        },
+
+        checkInLocation: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+
+        checkOutLocation: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+        absentLocation: {
+            type: DataTypes.STRING,
+            defaultValue: null,
+        },
+
+
+
+
+        activityLatLong: {
+            type: DataTypes.JSON,
+            defaultValue: [],
+        },
     },
-    date: {
-        type: String,
-        required: true
-    },
-    checkInTime: {
-        type: String,
-        default: null,
-    },
-    late: {
-        type: Boolean,
-        default: true,
-    },
-    checkInLocation: {
-        type: String,
-        default: null,
-    },
-    checkOutLocation: {
-        type: String,
-        default: null,
-    },
-    checkOutTime: {
-        type: String,
-        default: null,
-    },
-    activityLatLong: {
-        type: [
+    {
+        tableName: "attendances",
+        timestamps: true,
+        indexes: [
             {
-                lat: { type: String, required: true },
-                long: { type: String, required: true },
-                time: { type: String, required: true },
-            }
+                unique: true,
+                fields: ["userId", "date"],
+            },
         ],
-        default: []
-    },
-}, { versionKey: false, timestamps: true });
+    }
+);
 
-attendanceSchema.index({ userId: 1, date: 1 }, { unique: true });
 
-export default mongoose.model("Attendance", attendanceSchema);
+Attendance.belongsTo(User, { foreignKey: "userId" });
+
+export default Attendance;

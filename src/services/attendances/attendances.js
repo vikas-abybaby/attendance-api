@@ -1,23 +1,35 @@
 import Attendance from '../../models/attendance.js';
-import Helper from '../../utils/index.js'; // Assuming you have getISTDateParts() in here
+import Helper from '../../utils/index.js';
+import Services from './activityService.js';
+import { Op } from "sequelize";
 
 const attendanceByUserId = async (userId,) => {
-    const { currentDay, currentMonth, currentYear } = Helper.getISTDateParts();
-    const today = new Date(currentYear, currentMonth - 1, currentDay);
+    const today = Helper.getTodayDate();
     return await Attendance.findOne({
-        userId,
-        date: today,
+        where: {
+            userId: userId,
+            date: today
+        }
     });
+
+
 };
 
-const createAttendance = async ({ userId, lat, long, location }) => {
+const createAttendance = async ({ userId, lat, long, location, absent = 0 }) => {
     const currentTime = Helper.getCurrentISTTime();
     const formattedDate = Helper.getTodayDate();
+    console.log("createAttendance" + userId, lat, long, location, absent);
+
+
     return await Attendance.create({
         userId,
         date: formattedDate,
-        checkInTime: currentTime || null,
-        checkInLocation: location || null,
+        checkInTime: absent == 0 ? (currentTime || null) : null,
+        checkIn: absent == 0 ? true : false,
+        checkInLocation: absent == 0 ? (location || null) : null,
+        absent: absent == 1 ? true : false,
+        absentTime: absent == 1 ? (currentTime || null) : null,
+        absentLocation: absent == 1 ? (location || null) : null,
         activityLatLong: [
             {
                 lat: lat?.toString(),
@@ -25,32 +37,32 @@ const createAttendance = async ({ userId, lat, long, location }) => {
                 time: currentTime,
             },
         ],
+
+
+
+
     });
+
+
+
 };
 
 
-const updateAttendanceCheckout = async ({ userId, lat, long, location }) => {
-
-    const { currentDay, currentMonth, currentYear } = Helper.getISTDateParts();
+const updateAttendanceCheckout = async ({ id, lat, long, location }) => {
     const currentTime = Helper.getCurrentISTTime();
-    const today = new Date(currentYear, currentMonth - 1, currentDay);
 
-    const attendance = await Attendance.findOne({ userId, date: today });
+    const attendance = await Attendance.findOne({ where: { id } });
 
     if (!attendance) {
         throw new Error('Attendance record not found for check-out.');
     }
 
-    attendance.checkOutTime = currentTime || null;
+    attendance.checkOutTime = currentTime;
+    attendance.checkOut = true;
     attendance.checkOutLocation = location || null;
-
-    attendance.activityLatLong.push({
-        lat: lat?.toString(),
-        long: long?.toString(),
-        time: currentTime,
-    });
-
+    attendance.activityLatLong = await Services.addActivityLog(attendance.activityLatLong, { lat: lat?.toString(), long: long?.toString(), time: currentTime });
     await attendance.save();
+
     return attendance;
 };
 
@@ -61,11 +73,67 @@ const getAttendancesByUserIdsAndDate = async (userIds, dateFilter) => {
         ...dateFilter,
     }).populate('userId', '-password');
 };
+const getAttendanceWithUsers = async ({ userIds = [], dateFilter = {} }) => {
+    const query = {
+        ...(userIds.length ? { userId: { $in: userIds } } : {}),
+        ...dateFilter,
+    };
 
+    return await Attendance.find(query)
+        .populate('userId', '-password')
+        .lean();
+};
+
+const getAttendanceWithoutLate = async (userId) => {
+    const endOfMonth = Helper.getTodayDate();
+    const modifyDate = endOfMonth.split("-")
+    modifyDate[modifyDate.length - 1] = '01';    //  = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth() + 1).padStart(2, "0")}-01`;
+    const startOfMonth = modifyDate.join("-")
+
+    const attendance = await Attendance.findAll({
+        where: {
+            userId: userId,
+            checkIn: true,
+            late: false,
+            date: {
+                [Op.between]: [startOfMonth, endOfMonth]
+            }
+        }
+    });
+
+
+
+    return attendance;
+}
+
+const getLateAttendanceWithMonth = async (userId) => {
+    const endOfMonth = Helper.getTodayDate();
+    const modifyDate = endOfMonth.split("-")
+    modifyDate[modifyDate.length - 1] = '01';    //  = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth() + 1).padStart(2, "0")}-01`;
+    const startOfMonth = modifyDate.join("-")
+
+
+    const attendance = await Attendance.findAll({
+        where: {
+            userId: userId,
+            checkIn: true,
+            late: true,
+            date: {
+                [Op.between]: [startOfMonth, endOfMonth]
+            }
+        }
+    });
+
+
+    return attendance;
+}
 
 export default {
     attendanceByUserId,
     createAttendance,
+    getAttendanceWithoutLate,
+    getLateAttendanceWithMonth,
     updateAttendanceCheckout,
     getAttendancesByUserIdsAndDate,
+    getAttendanceWithUsers,
 };

@@ -15,6 +15,9 @@ const getActiveUserById = async (userId) => {
     isActive: true,
   }).select('-password');
 };
+const getFindBy = async (query) => {
+  return await User.findOne(query).select('_id');
+};
 
 
 
@@ -169,4 +172,5 @@ export default {
   getActiveUserById,
   getUsersSortedByBirthday,
   getUsersSortedByAnniversary,
+  getFindBy,
 };
