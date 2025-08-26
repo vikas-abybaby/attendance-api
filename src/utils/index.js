@@ -1,3 +1,4 @@
 import dateHelper from './dateHelper.js';
+import { getImageUrlIfExists } from './fileHelper.js';
 
-export default dateHelper;
+export default { dateHelper, getImageUrlIfExists };

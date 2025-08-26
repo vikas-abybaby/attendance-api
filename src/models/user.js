@@ -69,7 +69,7 @@ const User = sequelize.define(
       type: DataTypes.ENUM("android", "ios", "web"),
       allowNull: true,
     },
-    profilePicUrl: {
+    profile_url: {
       type: DataTypes.STRING,
       defaultValue: null,
     },

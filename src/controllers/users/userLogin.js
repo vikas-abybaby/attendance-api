@@ -1,7 +1,4 @@
 import Helper from '../../utils/index.js';
-
-
-
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../../models/user.js";
@@ -9,7 +6,7 @@ import User from "../../models/user.js";
 
 export const userLogin = async (req, res) => {
   const { email, password } = req.body;
-  const currentDate = Helper.getTodayIST();
+  const currentDate = Helper.dateHelper.getTodayIST();
 
   try {
     // 1. Find user by email

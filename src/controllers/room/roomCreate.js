@@ -1,7 +1,7 @@
 import Services from '../../services/index.js';
 
 
-export const userCreateRoom = async (req, res) => {
+export const roomCreate = async (req, res) => {
     try {
         const existingRoom = await Services.roomServices.getRoomByName(req.body.name);
         if (existingRoom) {
@@ -12,21 +12,18 @@ export const userCreateRoom = async (req, res) => {
             });
         }
 
-        console.log("body", req.body);
-        console.log("file", req.file);
-
         const creatRoom = await Services.roomServices.getCreateRoom(req);
 
         if (!creatRoom) {
-            return res.status(400).json({
+            return res.status(500).json({
                 message: 'Room Not Created',
-                status_code: 400,
+                status_code: 500,
                 data: null,
             });
         }
-        return res.status(400).json({
+        return res.status(200).json({
             message: '',
-            status_code: 400,
+            status_code: 200,
             data: creatRoom,
         });
     } catch (error) {

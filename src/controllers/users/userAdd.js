@@ -12,7 +12,7 @@ export const userAdd = async (req, res) => {
             });
         }
 
-        const newUser = await Services.userServices.getCreateUser(req.body);
+        const newUser = await Services.userServices.getCreateUser(req);
         if (!newUser) {
             return res.status(400).json({
                 message: "User not created",
