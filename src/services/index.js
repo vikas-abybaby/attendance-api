@@ -1,5 +1,9 @@
-import userServices from './users/user.js';
-import attendancesServices from './attendances/attendances.js';
-import activityServices from './attendances/activityService.js';
+import userServices from './users/index.js';
+import attendanceServices from './attendances/index.js';
+import roomServices from './room/index.js';
 
-export default { userServices, attendancesServices, activityServices };
+export default {
+    userServices,
+    attendanceServices,
+    roomServices,
+};

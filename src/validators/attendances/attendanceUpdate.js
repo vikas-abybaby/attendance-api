@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const attendanceSchema = Joi.object({
+export const attendanceUpdate = Joi.object({
   location: Joi.string().required().messages({
     'string.empty': 'Location is required.',
     'any.required': 'Location is required.',

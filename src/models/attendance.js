@@ -85,7 +85,7 @@ const Attendance = sequelize.define(
         indexes: [
             {
                 unique: true,
-                fields: ["userId", "date"],
+                fields: ["id", "date"],
             },
         ],
     }
