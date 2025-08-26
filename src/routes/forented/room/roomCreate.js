@@ -6,11 +6,11 @@ import validators from '../../../validators/index.js';
 const router = express.Router();
 
 router.post(
-    '/create-room',
-    middlewares.upload.single("avatar_url"),
+    '/create',
+    middlewares.photoUpload("room").single("avatar_url"),
     middlewares.allValidator(validators.roomValidators.roomCreate),
     middlewares.authMiddleware,
-    controllers.userControllers.userCreateRoom,
+    controllers.roomControllers.roomCreate,
 );
 
 export default router;

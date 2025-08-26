@@ -85,7 +85,7 @@ export const userCreate = Joi.object({
             "any.only": "Platform must be android, ios, or web",
         }),
 
-    profilePicUrl: Joi.string().uri().optional().messages({
+    profile_url: Joi.string().uri().optional().messages({
         "string.uri": "Profile picture URL must be a valid URI",
     }),
 });
