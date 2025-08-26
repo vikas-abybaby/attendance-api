@@ -1,18 +1,16 @@
 import express from 'express';
-import multer from 'multer';
 import controllers from '../../../controllers/index.js';
 import middlewares from '../../../middlewares/index.js';
 import validators from '../../../validators/index.js';
 
 const router = express.Router();
-const upload = multer();
 
 router.post(
-    '/mark',
-    upload.none(),
-    middlewares.allValidator(validators.attendanceSchema),
+    '/create-room',
+    middlewares.upload.single("avatar_url"),
+    middlewares.allValidator(validators.roomValidators.roomCreate),
     middlewares.authMiddleware,
-    controllers.attendanceControllers.attendanceMark,
+    controllers.userControllers.userCreateRoom,
 );
 
 export default router;

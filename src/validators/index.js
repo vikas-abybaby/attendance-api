@@ -1,4 +1,9 @@
-import { loginSchema } from './login_validator.js';
-import { attendanceSchema } from './attendanceValidation.js';
+import userValidators from './user/index.js';
+import roomValidators from './room/index.js';
+import attendanceValidators from './attendances/index.js';
 
-export default { loginSchema, attendanceSchema };
+export default {
+    userValidators,
+    roomValidators,
+    attendanceValidators,
+};
