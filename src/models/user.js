@@ -6,7 +6,7 @@ const User = sequelize.define(
   "User",
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
     },
@@ -82,7 +82,7 @@ const User = sequelize.define(
       allowNull: true,
     },
     createdBy: {
-      type: DataTypes.INTEGER, // FK to User.id
+      type: DataTypes.BIGINT, // FK to User.id
       references: {
         model: "Users",
         key: "id",
@@ -90,7 +90,7 @@ const User = sequelize.define(
       allowNull: true,
     },
     reportingTo: {
-      type: DataTypes.INTEGER, // FK to User.id
+      type: DataTypes.BIGINT, // FK to User.id
       references: {
         model: "Users",
         key: "id",

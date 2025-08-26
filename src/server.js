@@ -22,7 +22,7 @@ sequelize
     console.log("Tables created/updated!");
 
     server.listen(8001, () => {
-      console.log(`✅ API + Socket.IO running at http://192.168.0.116:8001`);
+      console.log(`✅ API + Socket.IO running at http://10.241.172.249:8001`);
     });
   })
   .catch((err) => {

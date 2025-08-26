@@ -11,11 +11,11 @@ const Attendance = sequelize.define(
             autoIncrement: true,
         },
 
-        userId: {
-            type: DataTypes.INTEGER,
+        user_id: {
+            type: DataTypes.BIGINT,
             allowNull: false,
             references: {
-                model: User,
+                model: "users",
                 key: "id",
             },
         },
@@ -92,6 +92,7 @@ const Attendance = sequelize.define(
 );
 
 
-Attendance.belongsTo(User, { foreignKey: "userId" });
+Attendance.belongsTo(User, { foreignKey: "user_id" });
+User.belongsTo(User, { as: "user", foreignKey: "user_id" });
 
 export default Attendance;
