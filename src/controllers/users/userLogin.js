@@ -4,7 +4,7 @@ import Helper from '../../utils/index.js';
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User  from "../../models/user.js"; 
+import User from "../../models/user.js";
 
 
 export const userLogin = async (req, res) => {
@@ -14,6 +14,7 @@ export const userLogin = async (req, res) => {
   try {
     // 1. Find user by email
     const user = await User.findOne({ where: { email } });
+    console.log("user" + user);
 
     if (!user) {
       return res.status(401).json({
