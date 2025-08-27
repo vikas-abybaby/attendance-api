@@ -1,9 +1,9 @@
 import Services from '../../services/index.js';
 
 
-export const roomCreate = async (req, res) => {
+export const groupCreate = async (req, res) => {
     try {
-        const existingRoom = await Services.roomServices.getRoomByName(req.body.name);
+        const existingRoom = await Services.groupServices.getGroupByName(req.body.name);
         if (existingRoom) {
             return res.status(400).json({
                 message: 'Room already exists',
@@ -12,7 +12,7 @@ export const roomCreate = async (req, res) => {
             });
         }
 
-        const creatRoom = await Services.roomServices.getCreateRoom(req);
+        const creatRoom = await Services.groupServices.getCreateGroup(req);
 
         if (!creatRoom) {
             return res.status(500).json({

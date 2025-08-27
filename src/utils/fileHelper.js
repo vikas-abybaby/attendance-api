@@ -2,7 +2,7 @@ import { log } from 'console';
 import fs from 'fs';
 import path from 'path';
 
-const BASE_URL = 'http://10.241.172.249:8001';
+const BASE_URL = 'http://192.168.0.107:8001';
 
 /**
  * Returns the full HTTP URL of a file if it exists in local storage, else null.
@@ -14,7 +14,6 @@ export function getImageUrlIfExists(relativePath, folder) {
     if (!relativePath) return null;
 
     const fullPath = path.join(STORAGE_PATH, relativePath);
-    console.log(fullPath);
 
     try {
         if (fs.existsSync(fullPath)) {

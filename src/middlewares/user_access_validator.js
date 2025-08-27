@@ -4,7 +4,11 @@ export const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({
+      message: 'No token provided',
+      status_code: 401,
+      data: null,
+    });
   }
 
   const token = authHeader.split(" ")[1];
@@ -14,6 +18,10 @@ export const authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
+    return res.status(401).json({
+      message: 'Invalid token',
+      status_code: 401,
+      data: null,
+    });
   }
 };

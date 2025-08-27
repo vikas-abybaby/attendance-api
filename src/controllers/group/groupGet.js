@@ -1,13 +1,10 @@
 import Services from "../../services/index.js";
 
 
-export const roomGet = async (req, res) => {
+export const groupGet = async (req, res) => {
 
     try {
-        const room = await Services.roomServices.getRooms();
-
-        // room.map
-
+        const room = await Services.groupServices.getGroups();
         return res.status(200).json({
             message: '',
             status_code: 200,

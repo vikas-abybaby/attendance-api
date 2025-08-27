@@ -1,7 +1,7 @@
 
 import Room from '../../models/room.js';
 
-export const getRoomByName = async (name) => {
+export const getGroupByName = async (name) => {
 
     const existingRoom = await Room.findOne({
         where: { name: name },
