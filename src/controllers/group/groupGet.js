@@ -4,7 +4,7 @@ import Services from "../../services/index.js";
 export const groupGet = async (req, res) => {
 
     try {
-        const room = await Services.groupServices.getRooms();
+        const room = await Services.groupServices.getGroups();
         return res.status(200).json({
             message: '',
             status_code: 200,
