@@ -3,6 +3,7 @@ import app from './app.js';
 import { createServer } from "http";
 import { Server } from "socket.io";
 import socketHandler from "./sockets/chatSocket.js";
+import authMiddleware from './middlewares/index.js';
 
 
 const server = createServer(app);
@@ -10,7 +11,7 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
 });
-
+io.use(authMiddleware.socketAuthMiddleware);
 io.on("connection", (socket) => {
   console.log("🔌 New client connected:", socket.id);
   socketHandler(io, socket);

@@ -5,7 +5,7 @@ import Services from './activityService.js';
 
 
 export const attendanceUppdate = async ({ id, lat, long, location }) => {
-    const currentTime = Helper.getCurrentISTTime();
+    const currentTime = Helper.dateHelper.getCurrentISTTime();
 
     const attendance = await Attendance.findOne({ where: { id } });
 

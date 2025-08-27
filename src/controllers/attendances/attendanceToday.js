@@ -1,6 +1,6 @@
 
 
-import services from '../../services/index.js';
+import Services from '../../services/index.js';
 
 export const attendanceToday = async (req, res) => {
     try {
@@ -17,16 +17,19 @@ export const attendanceToday = async (req, res) => {
             "checkOut": false,
             "month_without_late": 0,
             "month_late": 0,
-            "month_absent": 0
+            "month_absent": 0,
+            "group":[]
 
         }
 
 
-        const withoutLateattendanceMonth = await services.attendancesServices.getAttendanceWithoutLate(userId);
-        const lateAttendanceMonth = await services.attendancesServices.getLateAttendanceWithMonth(userId);
+        const withoutLateattendanceMonth = await Services.attendanceServices.attendanceWithLate(userId);
+        const lateAttendanceMonth = await Services.attendanceServices.attendanceWithoutLate(userId);
         todayAttendance.month_without_late = withoutLateattendanceMonth.length;
         todayAttendance.month_late = lateAttendanceMonth.length;
-        const attendance = await services.attendancesServices.attendanceByUserId(userId);
+        const attendance = await Services.attendanceServices.attendanceGetByUserId(userId);
+
+        todayAttendance.group = await Services.groupServices.getGroups();
 
         if (!attendance) {
             return res.status(200).json({

@@ -6,7 +6,7 @@ const router = express.Router();
 router.post(
     '/',
     middlewares.authMiddleware,
-    controllers.roomControllers.roomGet,
+    controllers.groupControllers.groupGet,
 );
 
 export default router;

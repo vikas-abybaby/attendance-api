@@ -2,37 +2,31 @@ import { v4 as uuidv4 } from "uuid";
 import Message from "../models/message.js";
 
 export default function socketHandler(io, socket) {
+    console.log("🔑 Current User:", socket.user);
 
-    socket.on("join", async ({ roomId, userId, name }) => {
+    socket.on("join", async ({ roomId }) => {
         try {
-            socket.join(roomId);
-            console.log(`${name} joined room ${roomId}`);
-
-
+            socket.join(roomId); // important to join room
             const history = await Message.findAll({
                 where: { room_id: roomId },
                 order: [["created_at", "ASC"]],
                 limit: 20,
             });
 
-
             socket.emit("history", history);
-
-
-            socket.to(roomId).emit("userJoined", { userId, name });
+            io.to(roomId).emit("userJoined", { user: socket.user });
         } catch (err) {
             console.error("Error in join:", err);
         }
     });
 
-
-    socket.on("message", async ({ roomId, text, senderId }) => {
+    // Send message
+    socket.on("message", async ({ roomId, text }) => {
         try {
             const msg = await Message.create({
-
                 message_id: uuidv4(),
                 room_id: roomId,
-                sender_id: senderId,
+                user_id: socket.user.id, // 👈 always from token
                 content: text,
             });
 
@@ -42,12 +36,15 @@ export default function socketHandler(io, socket) {
         }
     });
 
-
-    socket.on("typing", ({ roomId, userId, isTyping }) => {
-        socket.to(roomId).emit("typing", { userId, isTyping });
+    // Typing
+    socket.on("typing", ({ roomId, isTyping }) => {
+        socket.to(roomId).emit("typing", {
+            userId: socket.user.id,
+            isTyping,
+        });
     });
 
-
+    // Disconnect
     socket.on("disconnect", () => {
         console.log("Client disconnected:", socket.id);
     });

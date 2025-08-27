@@ -3,10 +3,10 @@ import Helper from '../../utils/index.js';
 
 
 export const attendanceGetByUserId = async (userId,) => {
-    const today = Helper.getTodayDate();
+    const today = Helper.dateHelper.getTodayDate();
     return await Attendance.findOne({
         where: {
-            userId: userId,
+            user_id: userId,
             date: today
         }
     });

@@ -10,7 +10,7 @@ router.post(
     middlewares.photoUpload("room").single("avatar_url"),
     middlewares.allValidator(validators.roomValidators.roomCreate),
     middlewares.authMiddleware,
-    controllers.roomControllers.roomCreate,
+    controllers.groupControllers.groupCreate,
 );
 
 export default router;
