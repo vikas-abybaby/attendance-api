@@ -1,4 +1,4 @@
-import userControllers from './users/index.js';
+import * as userControllers from './userController.js';
 import attendanceControllers from './attendances/index.js';
 import groupControllers from './group/index.js';
 

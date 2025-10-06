@@ -1,4 +1,6 @@
-import { admin, v1 } from './routes/index.js';
+import forntend from './routes/forented/index.js';
+import admin from './routes/admin/index.js';
+
 import express from 'express';
 import path from 'path';
 
@@ -7,7 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/storage', express.static(path.join(process.cwd(), 'src/storage')));
 
+app.use('/api/app', forntend);
 app.use('/api/admin', admin);
-app.use('/api/v1', v1);
 
 export default app;

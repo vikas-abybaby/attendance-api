@@ -1,9 +1,9 @@
 import Attendance from '../../models/attendance.js';
-import Helper from '../../utils/index.js';
+import { dateHelper } from '../../utils/index.js';
 
 export const attendanceCreate = async ({ userId, lat, long, location, absent = 0 }) => {
-    const currentTime = Helper.dateHelper.getCurrentISTTime();
-    const formattedDate = Helper.dateHelper.getTodayDate();
+    const currentTime = dateHelper.getCurrentISTTime();
+    const formattedDate = dateHelper.getTodayDate();
     console.log("createAttendance" + userId, lat, long, location, absent);
     return await Attendance.create({
         userId,

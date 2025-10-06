@@ -1,28 +1,23 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/connection.js';
 
-const Role = sequelize.define(
-    'Role',
+const Department = sequelize.define(
+    'Department',
     {
         id: {
             type: DataTypes.BIGINT,
             primaryKey: true,
             autoIncrement: true,
         },
-        role_name: {
+        department_name: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        department_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-
-        },
     },
     {
-        tableName: 'roles',
+        tableName: 'departments',
         timestamps: true,
     }
 );
 
-export default Role;
+export default Department;

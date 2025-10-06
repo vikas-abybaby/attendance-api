@@ -1,6 +1,11 @@
 import Joi from "joi";
 
-export const userCreate = Joi.object({
+export const userUpdate = Joi.object({
+    id: Joi.string()
+        .required()
+        .messages({
+            "string.empty": "UserId is required",
+        }),
     name: Joi.string()
         .min(3)
         .max(100)
@@ -9,24 +14,6 @@ export const userCreate = Joi.object({
             "string.empty": "Name is required",
             "string.min": "Name must be at least 3 characters",
             "string.max": "Name must not exceed 100 characters",
-        }),
-
-    email: Joi.string()
-        .email()
-        .required()
-        .messages({
-            "string.empty": "Email is required",
-            "string.email": "Please provide a valid email address",
-        }),
-
-    password: Joi.string()
-        .min(6)
-        .max(100)
-        .required()
-        .messages({
-            "string.empty": "Password is required",
-            "string.min": "Password must be at least 6 characters",
-            "string.max": "Password must not exceed 100 characters",
         }),
 
     dob: Joi.date()
@@ -85,7 +72,14 @@ export const userCreate = Joi.object({
             "any.only": "Platform must be android, ios, or web",
         }),
 
-    profile_url: Joi.string().uri().optional().messages({
+    profile_url: Joi.string().uri().allow(null, "").messages({
         "string.uri": "Profile picture URL must be a valid URI",
     }),
+    status: Joi.string()
+        .valid("0", "1")
+        .required()
+        .messages({
+            "any.only": "Status must be 0 or 1",
+            "string.empty": "Status is required"
+        }),
 });
