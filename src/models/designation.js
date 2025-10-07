@@ -17,6 +17,12 @@ const Designation = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        status: {
+            type: DataTypes.ENUM("0", "1"),
+            allowNull: false,
+            defaultValue: "1",
+            comment: "0 = inActive, 1 = active",
+        }
     },
     {
         tableName: 'designations',

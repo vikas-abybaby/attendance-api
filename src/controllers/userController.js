@@ -1,5 +1,5 @@
 import services from '../services/index.js';
-
+import { responceHelper } from '../utils/index.js'
 export const userLogin = async (req, res) => {
     try {
         const loginUser = req.body;
@@ -14,7 +14,6 @@ export const userLogin = async (req, res) => {
     }
 };
 
-
 export const userProfile = async (req, res) => {
     try {
 
@@ -23,26 +22,31 @@ export const userProfile = async (req, res) => {
         const user = await services.userServices.getUserById(currentUser);
         return res.status(user.status).json(user);
     } catch (err) {
-        res.status(500).json({ message: 'Server error' + err, status_code: 500, data: null });
+        res.status(500).json({
+            message: 'Server error' + err,
+            status_code: 500,
+            data: null
+        });
     }
 };
 
 export const userGet = async (req, res) => {
     try {
-        const users = await services.userServices.getAllUsers();
-        res.status(200).json({
-            message: 'All Active User',
-            status_code: 200,
-            data: users,
-        });
+
+
+        const filter = req.body;
+        const users = await services.userServices.getAllUsers(filter);
+        return res.status(users.status).json(users);
+
     } catch (error) {
         res.status(500).json({
-            message: 'Internal Server Error',
+            message: 'Server error' + error,
             status_code: 500,
-            data: [],
+            data: null
         });
     }
 };
+
 export const userAdd = async (req, res) => {
     const email = req.body.email;
     console.log(email);
@@ -79,7 +83,6 @@ export const userAdd = async (req, res) => {
         });
     }
 };
-
 
 export const userEdit = async (req, res) => {
     try {

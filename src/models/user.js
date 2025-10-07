@@ -23,6 +23,10 @@ const User = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    designationName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -43,6 +47,10 @@ const User = sequelize.define(
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    roleName: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     phone: {
       type: DataTypes.STRING,
@@ -71,6 +79,10 @@ const User = sequelize.define(
     },
     departmentId: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    departmentName: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     employeeId: {
