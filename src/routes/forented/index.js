@@ -11,33 +11,28 @@ router.post(
     '/login',
     controllers.userControllers.userLogin,
 );
-
 router.get(
     '/profile',
     middlewares.authMiddleware,
     controllers.userControllers.userProfile,
 );
-
 router.post(
     '/users',
     middlewares.authMiddleware,
     controllers.userControllers.userGet,
 );
-
 router.post(
     '/user-add',
     [uploadProfile, userCreate,],
     middlewares.authMiddleware,
     controllers.userControllers.userAdd,
 );
-
 router.patch(
     '/user-edit',
     [uploadProfile, userUpdate,],
     middlewares.authMiddleware,
     controllers.userControllers.userEdit
 );
-
 router.get(
     '/roles',
     middlewares.authMiddleware,
@@ -68,5 +63,14 @@ router.post(
     middlewares.authMiddleware,
     controllers.designationControllers.designationByIdGet
 );
-
+router.post(
+    '/birthday',
+    middlewares.authMiddleware,
+    controllers.userControllers.userBirthday
+);
+router.post(
+    '/workAnniversary',
+    middlewares.authMiddleware,
+    controllers.userControllers.userWorkAnniversary
+);
 export default router;

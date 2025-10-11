@@ -23,21 +23,18 @@ const User = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    designationName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
+
     password: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: { len: [6, 100] },
     },
     dob: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
-    age: {
-      type: DataTypes.INTEGER,
+    joiningDate: {
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
     gender: {
@@ -48,10 +45,7 @@ const User = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    roleName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
+
     phone: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -81,10 +75,7 @@ const User = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    departmentName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
+
     employeeId: {
       type: DataTypes.STRING,
       allowNull: true,

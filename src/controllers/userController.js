@@ -32,8 +32,6 @@ export const userProfile = async (req, res) => {
 
 export const userGet = async (req, res) => {
     try {
-
-
         const filter = req.body;
         const users = await services.userServices.getAllUsers(filter);
         return res.status(users.status).json(users);
@@ -49,40 +47,28 @@ export const userGet = async (req, res) => {
 
 export const userAdd = async (req, res) => {
     const email = req.body.email;
-    console.log(email);
-
-    try {
-        const existingUser = await services.userServices.getEmailByUser(email);
-
-        if (existingUser) {
-            return res.status(400).json({
-                message: 'Email already exists',
-                status_code: 400,
-                data: null,
-            });
-        }
-
-        const result = await services.userServices.getCreateUser(req);
-        if (!result.success) {
-            return res.status(result.status_code || 400).json({
-                message: result.message,
-                status_code: result.status_code || 400,
-                data: null
-            });
-        }
-        res.status(201).json({
-            message: result.message,
-            status_code: 201,
-            data: result.data,
+    const existingUser = await services.userServices.getEmailByUser(email);
+    if (existingUser) {
+        return res.status(400).json({
+            message: 'Email already exists',
+            status_code: 400,
+            data: null,
         });
-    } catch (err) {
-        res.status(500).json({
-            message: 'Server error' + err,
-            status_code: 500,
+    }
+    const result = await services.userServices.getCreateUser(req);
+    if (!result.success) {
+        return res.status(result.status_code || 400).json({
+            message: result.message,
+            status_code: result.status_code || 400,
             data: null
         });
     }
-};
+    res.status(201).json({
+        message: result.message,
+        status_code: 201,
+        data: result.data,
+    });
+}
 
 export const userEdit = async (req, res) => {
     try {
@@ -111,3 +97,40 @@ export const userEdit = async (req, res) => {
     }
 };
 
+export const userBirthday = async (req, res) => {
+
+    const filter = req.body;
+
+    const birthday = await services.userServices.getUsersBirthday(filter);
+    if (!birthday.success) {
+        return res.status(birthday.status_code || 400).json({
+            message: birthday.message,
+            status_code: birthday.status_code || 400,
+            data: null
+        });
+    }
+    res.status(201).json({
+        message: birthday.message,
+        status_code: 200,
+        data: birthday.data,
+    });
+
+};
+export const userWorkAnniversary = async (req, res) => {
+    const filter = req.body;
+
+    const workAnniversary = await services.userServices.getUsersWorkAnniversary(filter);
+    if (!workAnniversary.success) {
+        return res.status(workAnniversary.status_code || 400).json({
+            message: workAnniversary.message,
+            status_code: workAnniversary.status_code || 400,
+            data: null
+        });
+    }
+    res.status(201).json({
+        message: workAnniversary.message,
+        status_code: 200,
+        data: workAnniversary.data,
+    });
+
+};

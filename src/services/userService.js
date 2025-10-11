@@ -3,7 +3,7 @@ import Role from "../models/role.js";
 import Department from "../models/department.js";
 import Designation from "../models/designation.js";
 import UserToken from "../models/accessToken.js";
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 import { dateHelper, responceHelper, fileHelper } from '../utils/index.js';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -88,23 +88,27 @@ export const getUserById = async (userId) => {
 
     const profileUrl = fileHelper.getImageUrlIfExists(userData.profile_url, 'storage/profile')
     userData.profile_url = profileUrl;
-    userData.roleName = roleData.role_name;
-    userData.designationName = designationData.designation_name;
-    userData.departmentName = departmentData.department_name;
+
+    const result = {
+        ...userData.toJSON(),
+        roleName: roleData.role_name,
+        departmentName: designationData.designation_name,
+        designationName: departmentData.department_name,
+    };
 
 
-    return responceHelper.success(userData, "User Get", 200);
+
+    return responceHelper.success(result, "User Get", 200);
 };
 
-
 export const getAllUsers = async (filter) => {
-    const { designation_id, role_id, department_id, status } = filter;
+    const { designation_id, role_id, department_id, status, skip, take } = filter;
     const parseIds = (value) =>
         value ? value.split(',').map((id) => id.trim()) : [];
 
-    const designationIds = parseIds(filter.designation_id);
-    const roleIds = parseIds(filter.role_id).filter((id) => id !== '1');
-    const departmentIds = parseIds(filter.department_id);
+    const designationIds = parseIds(designation_id);
+    const roleIds = parseIds(role_id).filter((id) => id !== '1');
+    const departmentIds = parseIds(department_id);
     let filterStatus = '1';
 
     if (typeof status === 'number') {
@@ -129,11 +133,17 @@ export const getAllUsers = async (filter) => {
         whereCondition.departmentId = { [Op.in]: departmentIds };
     }
 
+    const offset = Number(skip) || 0;
+    const limit = Number(take) || 10;
+    // const totalCount = await User.count({ where: whereCondition });
 
     try {
         const users = await User.findAll({
             where: whereCondition,
             attributes: { exclude: ['password'] },
+            offset,
+            limit,
+            order: [["id", "DESC"]],
         });
 
         if (!users.length) {
@@ -147,12 +157,16 @@ export const getAllUsers = async (filter) => {
                 if (!roleData || !deptData || !desigData) {
                     return null;
                 }
-                const userData = user.toJSON();
-                userData.profile_url = fileHelper.getImageUrlIfExists(user.profile_url, 'storage/profile');
-                userData.roleName = roleData.role_name;
-                userData.departmentName = deptData.department_name;
-                userData.designationName = desigData.designation_name;
-                return userData;
+                user.profile_url = fileHelper.getImageUrlIfExists(user.profile_url, 'storage/profile');
+
+                const result = {
+                    ...user.toJSON(),
+                    roleName: roleData.role_name,
+                    departmentName: desigData.designation_name,
+                    designationName: deptData.department_name,
+                };
+
+                return result;
             })
         );
         const validUsers = enrichedUsers.filter((u) => u !== null);
@@ -161,7 +175,6 @@ export const getAllUsers = async (filter) => {
         return responceHelper.error(null, "Failed to fetch users", 500);
     }
 };
-
 
 export const getCreateUser = async (userData) => {
     const user = userData.body;
@@ -184,7 +197,6 @@ export const getCreateUser = async (userData) => {
             dob: userData.body.dob || null,
             createdBy: userData.body.createdBy || null,
             reportingTo: userData.body.reportingTo || null,
-            // profile_url: userData.file?.filename || null,
         });
 
         return { success: true, message: 'User registered successfully', data: newUser };
@@ -194,6 +206,7 @@ export const getCreateUser = async (userData) => {
         return { success: false, message: 'User not created', status_code: 400 };
     }
 };
+
 export const getUpdateUser = async (userData) => {
     console.log("id");
 
@@ -212,10 +225,147 @@ export const getEmailByUser = async (email) => {
 
     try {
         const userData = await User.findOne({ where: { email: email, status: '1' } });
+
         return userData;
     } catch (error) {
-        console.log(error);
-
+        return { success: false, message: 'Email not received', status_code: 400 };
     }
-    return null;
-}; 
+};
+
+export const getUsersBirthday = async (filter) => {
+    try {
+        const { designation_id, role_id, department_id, status, skip = 0, take = 10 } = filter;
+        const { currentDay, currentMonth, currentYear } = dateHelper.getISTDateParts();
+        const today = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`;
+
+        const parseIds = (value) => value ? value.split(',').map((id) => id.trim()) : [];
+        const designationIds = parseIds(designation_id);
+        const roleIds = parseIds(role_id);
+        const departmentIds = parseIds(department_id);
+
+        let filterStatus = '1';
+        if (typeof status === 'number') filterStatus = status.toString();
+        else if (typeof status === 'string') filterStatus = status;
+
+        const nextMonths = [
+            currentMonth,
+            (currentMonth % 12) + 1,
+            ((currentMonth + 1) % 12) + 1,
+        ];
+
+        const whereClause = {
+            status: filterStatus,
+            ...(designationIds.length && { designationId: { [Op.in]: designationIds } }),
+            ...(roleIds.length && { roleId: { [Op.in]: roleIds } }),
+            ...(departmentIds.length && { departmentId: { [Op.in]: departmentIds } }),
+            [Op.or]: nextMonths.map((m) => literal(`MONTH(dob) = ${m}`)),
+        };
+        const users = await User.findAll({
+            attributes: {
+                include: [
+                    [fn('DAY', col('dob')), 'dobDay'],
+                    [fn('MONTH', col('dob')), 'dobMonth'],
+                    [
+                        literal(`
+            CASE
+              WHEN STR_TO_DATE(CONCAT('${currentYear}-', LPAD(MONTH(dob),2,'0'), '-', LPAD(DAY(dob),2,'0')), '%Y-%m-%d') < '${today}'
+              THEN STR_TO_DATE(CONCAT('${currentYear + 1}-', LPAD(MONTH(dob),2,'0'), '-', LPAD(DAY(dob),2,'0')), '%Y-%m-%d')
+              ELSE STR_TO_DATE(CONCAT('${currentYear}-', LPAD(MONTH(dob),2,'0'), '-', LPAD(DAY(dob),2,'0')), '%Y-%m-%d')
+            END
+          `),
+                        'nextBirthday',
+                    ],
+                    [
+                        literal(`
+            CASE
+              WHEN MONTH(dob) = ${currentMonth} AND DAY(dob) = ${currentDay} THEN 1
+              ELSE 0
+            END
+          `),
+                        'isTodayBirthday',
+                    ],
+                ],
+                exclude: ['password'],
+            },
+            where: whereClause,
+            order: [
+                [literal('isTodayBirthday'), 'DESC'],
+                [literal('nextBirthday'), 'ASC'],
+            ],
+            offset: skip,
+            limit: take,
+        });
+        return { success: true, message: 'User Birthday', data: users };
+    } catch (error) {
+        return { success: false, message: 'Birthday not received', status_code: 400 };
+    }
+};
+
+export const getUsersWorkAnniversary = async (filter) => {
+    try {
+        const { designation_id, role_id, department_id, status, skip = 0, take = 10 } = filter;
+        const { currentDay, currentMonth, currentYear } = dateHelper.getISTDateParts();
+        const today = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`;
+
+        const parseIds = (value) => value ? value.split(',').map((id) => id.trim()) : [];
+        const designationIds = parseIds(designation_id);
+        const roleIds = parseIds(role_id);
+        const departmentIds = parseIds(department_id);
+
+        let filterStatus = '1';
+        if (typeof status === 'number') filterStatus = status.toString();
+        else if (typeof status === 'string') filterStatus = status;
+
+        const nextMonths = [
+            currentMonth,
+            (currentMonth % 12) + 1,
+            ((currentMonth + 1) % 12) + 1,
+        ];
+
+        const whereClause = {
+            status: filterStatus,
+            ...(designationIds.length && { designationId: { [Op.in]: designationIds } }),
+            ...(roleIds.length && { roleId: { [Op.in]: roleIds } }),
+            ...(departmentIds.length && { departmentId: { [Op.in]: departmentIds } }),
+            [Op.or]: nextMonths.map((m) => literal(`MONTH(joiningDate) = ${m}`)),
+        };
+        const users = await User.findAll({
+            attributes: {
+                include: [
+                    [fn('DAY', col('joiningDate')), 'joiningDateDay'],
+                    [fn('MONTH', col('joiningDate')), 'joiningDateMonth'],
+                    [
+                        literal(`
+            CASE
+              WHEN STR_TO_DATE(CONCAT('${currentYear}-', LPAD(MONTH(joiningDate),2,'0'), '-', LPAD(DAY(joiningDate),2,'0')), '%Y-%m-%d') < '${today}'
+              THEN STR_TO_DATE(CONCAT('${currentYear + 1}-', LPAD(MONTH(joiningDate),2,'0'), '-', LPAD(DAY(joiningDate),2,'0')), '%Y-%m-%d')
+              ELSE STR_TO_DATE(CONCAT('${currentYear}-', LPAD(MONTH(joiningDate),2,'0'), '-', LPAD(DAY(joiningDate),2,'0')), '%Y-%m-%d')
+            END
+          `),
+                        'nextBirthday',
+                    ],
+                    [
+                        literal(`
+            CASE
+              WHEN MONTH(joiningDate) = ${currentMonth} AND DAY(joiningDate) = ${currentDay} THEN 1
+              ELSE 0
+            END
+          `),
+                        'isTodayBirthday',
+                    ],
+                ],
+                exclude: ['password'],
+            },
+            where: whereClause,
+            order: [
+                [literal('isTodayBirthday'), 'DESC'],
+                [literal('nextBirthday'), 'ASC'],
+            ],
+            offset: skip,
+            limit: take,
+        });
+        return { success: true, message: 'User registered successfully', data: users };
+    } catch (error) {
+        return { success: false, message: 'Birthday not received', status_code: 400 };
+    }
+};
