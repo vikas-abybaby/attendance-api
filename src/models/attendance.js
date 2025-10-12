@@ -14,10 +14,6 @@ const Attendance = sequelize.define(
         user_id: {
             type: DataTypes.BIGINT,
             allowNull: false,
-            references: {
-                model: "users",
-                key: "id",
-            },
         },
 
         date: {
@@ -82,17 +78,8 @@ const Attendance = sequelize.define(
     {
         tableName: "attendances",
         timestamps: true,
-        indexes: [
-            {
-                unique: true,
-                fields: ["id", "date"],
-            },
-        ],
+
     }
 );
-
-
-Attendance.belongsTo(User, { foreignKey: "user_id" });
-User.belongsTo(User, { as: "user", foreignKey: "user_id" });
 
 export default Attendance;

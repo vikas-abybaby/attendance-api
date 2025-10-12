@@ -1,12 +1,12 @@
 
-import Utils from '../../utils/index.js';
+import { dateHelper } from '../../utils/index.js';
 import User from '../../models/user.js';
 import Attendance from '../../models/attendance.js';
 import Services from '../../services/index.js';
 
 export const attendanceAll = async (req, res) => {
     try {
-        const today = Utils.getTodayIST();
+        const today = dateHelper.getTodayIST();
         const { startDate = today, endDate = today } = req.body || {};
         const user = await Services.userServices.getActiveUserById(req.user.userId);
         let dateFilter = {};

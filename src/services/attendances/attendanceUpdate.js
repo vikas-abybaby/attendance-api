@@ -1,11 +1,11 @@
 
 import Attendance from '../../models/attendance.js';
-import Helper from '../../utils/index.js';
+import { dateHelper } from '../../utils/index.js';
 import Services from './activityService.js';
 
 
 export const attendanceUppdate = async ({ id, lat, long, location }) => {
-    const currentTime = Helper.dateHelper.getCurrentISTTime();
+    const currentTime =dateHelper.getCurrentISTTime();
 
     const attendance = await Attendance.findOne({ where: { id } });
 

@@ -1,9 +1,11 @@
-import userValidators from './user/index.js';
-import roomValidators from './room/index.js';
-import attendanceValidators from './attendances/index.js';
+import { userCreate } from './userCreate.js';
+import { userUpdate } from './userUpdate.js';
+import { userLogin } from './userLogin.js';
+import { attendanceUpdate } from './attendanceUpdate.js';
 
 export default {
-    userValidators,
-    roomValidators,
-    attendanceValidators,
+    userUpdate,
+    userCreate,
+    userLogin,
+    attendanceUpdate
 };

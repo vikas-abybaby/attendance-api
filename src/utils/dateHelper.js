@@ -1,8 +1,8 @@
-const getTodayIST = () => {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+export const getTodayIST = () => {
+    return new Date(new Date().toLocaleString( { timeZone: 'Asia/Kolkata' }));
 };
 
-const getCurrentISTTime = () => {
+export const getCurrentISTTime = () => {
     return new Date().toLocaleTimeString('en-GB', {
         timeZone: 'Asia/Kolkata',
         hour12: false,
@@ -12,7 +12,7 @@ const getCurrentISTTime = () => {
     });
 };
 
-const getISTDateParts = () => {
+export const getISTDateParts = () => {
     const date = getTodayIST();
     return {
         currentDay: date.getDate(),
@@ -20,15 +20,8 @@ const getISTDateParts = () => {
         currentYear: date.getFullYear(),
     };
 };
-const getTodayDate = () => {
+export const getTodayDate = () => {
     const date = getTodayIST();
     const formattedDate = date.toLocaleDateString('en-CA');
     return formattedDate;
-};
-
-export default {
-    getTodayIST,
-    getCurrentISTTime,
-    getISTDateParts,
-    getTodayDate,
 };

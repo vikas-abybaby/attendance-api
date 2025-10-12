@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import bcrypt from "bcrypt";
-import sequelize from "../config/connection.js"; // your Sequelize connection instance
+import sequelize from "../config/connection.js"; // your Sequelize instance
 
 const User = sequelize.define(
   "User",
@@ -17,34 +17,35 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: { isEmail: true },
     },
-    designation: {
-      type: DataTypes.STRING,
-      allowNull: true,
+    designationId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
+
     password: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: { len: [6, 100] },
     },
     dob: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
-    age: {
-      type: DataTypes.INTEGER,
+    joiningDate: {
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
     gender: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    role: {
-      type: DataTypes.ENUM("admin", "manager", "employee", "hr"),
-      defaultValue: "employee",
+    roleId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
+
     phone: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -53,10 +54,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
+
     lastLogin: {
       type: DataTypes.DATE,
       defaultValue: null,
@@ -73,30 +71,31 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       defaultValue: null,
     },
-    department: {
-      type: DataTypes.STRING,
+    departmentId: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
+
     employeeId: {
       type: DataTypes.STRING,
       allowNull: true,
     },
     createdBy: {
-      type: DataTypes.BIGINT, // FK to User.id
-      references: {
-        model: "Users",
-        key: "id",
-      },
+      type: DataTypes.BIGINT,
       allowNull: true,
+
     },
     reportingTo: {
-      type: DataTypes.BIGINT, // FK to User.id
-      references: {
-        model: "Users",
-        key: "id",
-      },
+      type: DataTypes.BIGINT,
       allowNull: true,
+
     },
+    status: {
+      type: DataTypes.ENUM("0", "1"),
+      allowNull: true,
+      defaultValue: "1",
+      comment: "0 = inActive, 1 = active",
+    }
   },
   {
     timestamps: true,
@@ -112,7 +111,7 @@ const User = sequelize.define(
   }
 );
 
-// Method for password compare (like mongoose method)
+// Password compare helper
 User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };

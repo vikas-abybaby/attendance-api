@@ -9,9 +9,7 @@ export const userLogin = async (req, res) => {
   const currentDate = Helper.dateHelper.getTodayIST();
 
   try {
-    // 1. Find user by email
     const user = await User.findOne({ where: { email } });
-    console.log("user" + user);
 
     if (!user) {
       return res.status(401).json({
@@ -23,13 +21,13 @@ export const userLogin = async (req, res) => {
 
     // 2. Compare password (bcrypt)
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        message: "Invalid password credentials",
-        status_code: 401,
-        data: null,
-      });
-    }
+      if (!isMatch) {
+        return res.status(401).json({
+          message: "Invalid password credentials",
+          status_code: 401,
+          data: null,
+        });
+      }
 
     // 3. Update last login
     user.lastLogin = currentDate;
