@@ -7,7 +7,7 @@ import * as designationServices from './designationServices.js';
 
 
 export default {
-    userServices,
+    ...userServices,
     attendanceServices,
     groupServices,
     roleServices,

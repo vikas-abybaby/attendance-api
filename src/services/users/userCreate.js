@@ -1,5 +1,5 @@
 import User from '../../models/user.js';
-
+import { apiErrorHelper } from '../../utils/index.js'
 export const getCreateUser = async (userData) => {
 
     const newUser = new User({
@@ -10,5 +10,12 @@ export const getCreateUser = async (userData) => {
         profile_url: userData.file ? userData.file.filename : null,
     });
 
-    return await newUser.save();
+
+    const saveUser = await newUser.save();
+
+    if (!saveUser) {
+        throw new apiErrorHelper(404, 'User not created');
+    }
+
+    return saveUser;
 };

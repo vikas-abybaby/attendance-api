@@ -1,16 +1,12 @@
-import services from '../services/index.js';
-import { responceHelper } from '../utils/index.js'
-export const userLogin = async (req, res) => {
+import Services from '../services/index.js';
+import { ApiResponse } from '../utils/index.js'
+export const userLogin = async (req, res, next) => {
     try {
         const loginUser = req.body;
-        const loginData = await services.userServices.userLogin(loginUser);
-        return res.status(loginData.status).json(loginData);
+        const loginData = await Services.userLogin(loginUser);
+        return ApiResponse.success(res, loginData, 'User Login successfully');
     } catch (error) {
-        return res.status(500).json({
-            message: 'Server error: ' + error.message,
-            status_code: 500,
-            data: null
-        });
+        next(error);
     }
 };
 
@@ -19,7 +15,7 @@ export const userProfile = async (req, res) => {
 
         const currentUser = req.userId;
 
-        const user = await services.userServices.getUserById(currentUser);
+        const user = await Services.getUserById(currentUser);
         return res.status(user.status).json(user);
     } catch (err) {
         res.status(500).json({
@@ -103,11 +99,7 @@ export const userBirthday = async (req, res) => {
 
     const birthday = await services.userServices.getUsersBirthday(filter);
     if (!birthday.success) {
-        return res.status(birthday.status_code || 400).json({
-            message: birthday.message,
-            status_code: birthday.status_code || 400,
-            data: null
-        });
+        return res.status(birthday.status_code).json(birthday);
     }
     res.status(201).json({
         message: birthday.message,

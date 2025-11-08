@@ -1,5 +1,5 @@
 import Role from '../models/role.js';
-import { responceHelper } from '../utils/index.js';
+import { ApiResponse } from '../utils/index.js';
 
 export const getRoles = async () => {
 
@@ -10,9 +10,9 @@ export const getRoles = async () => {
         }
     });
     if (!roles) {
-        return responceHelper.error(null, "Role Not Found!", 401);
+        return ApiResponse.error(null, "Role Not Found!", 401);
     }
-    return responceHelper.success(roles, "Role Get", 200);
+    return ApiResponse.success(roles, "Role Get", 200);
 
 
 };
@@ -29,8 +29,8 @@ export const getIdByRole = async (id) => {
     });
 
     if (!roles) {
-        return responceHelper.error(null, "Role Not Found!", 401);
+        return ApiResponse.error(null, "Role Not Found!", 401);
     }
-    return responceHelper.success(roles, "Role Get", 200);
+    return ApiResponse.success(roles, "Role Get", 200);
 
 };

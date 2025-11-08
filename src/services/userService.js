@@ -4,87 +4,86 @@ import Department from "../models/department.js";
 import Designation from "../models/designation.js";
 import UserToken from "../models/accessToken.js";
 import { Op, fn, col, literal } from 'sequelize';
-import { dateHelper, responceHelper, fileHelper } from '../utils/index.js';
+import { dateHelper, fileHelper, ApiError } from '../utils/index.js';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const userLogin = async (loginData) => {
     const currentDate = dateHelper.getTodayIST();
     const { email, password } = loginData;
+
     const user = await User.findOne({ where: { email, status: '1' } });
     if (!user) {
-        return responceHelper.error(null, "Invalid email credentials!", 401);
+        throw new ApiError(401, 'Invalid email credentials!');
     }
-    const roleId = user.roleId;
-    const departmentId = user.departmentId;
-    const designationId = user.designationId;
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-        return responceHelper.error(null, "Invalid password!", 401);
+        throw new ApiError(401, 'Invalid password!');
     }
+
     user.lastLogin = currentDate;
     await user.save();
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     if (!token) {
-        return responceHelper.error(null, "Token generation failed!", 500);
+        throw new ApiError(500, 'Token generation failed!');
     }
+
     const createToken = await UserToken.create({ userId: user.id, token });
     if (!createToken) {
-        return responceHelper.error(null, "Failed to save token!", 500);
+        throw new ApiError(500, 'Failed to save token!');
     }
+
     const accessToken = `${createToken.id}|${token}`;
-    const { password: _, ...userData } = user.get({ plain: true });
 
-    const roleData = await Role.findOne({ where: { id: roleId, status: '1' } });
-    if (!roleData) {
-        return responceHelper.error(null, "Invalid Role!", 401);
-    }
-    const departmentData = await Department.findOne({ where: { id: departmentId, status: '1' } });
-    if (!departmentData) {
-        return responceHelper.error(null, "Invalid Department!", 401);
-    }
-    const designationData = await Designation.findOne({ where: { id: designationId, status: '1' } });
-    if (!designationData) {
-        return responceHelper.error(null, "Invalid Designation!", 401);
-    }
+    const userData = user;
+    delete userData.password;
+    const roleId = userData.roleId;
+    const departmentId = userData.departmentId;
+    const designationId = userData.designationId;
+    const [roleData, departmentData, designationData] = await Promise.all([
+        Role.findOne({ where: { id: roleId, status: '1' } }),
+        Department.findOne({ where: { id: departmentId, status: '1' } }),
+        Designation.findOne({ where: { id: designationId, status: '1' } })
+    ]);
 
-    const profileUrl = fileHelper.getImageUrlIfExists(userData.profile_url, 'storage/profile')
-    userData.profile_url = profileUrl;
+    if (!roleData) throw new ApiError(401, 'Invalid Role!');
+    if (!departmentData) throw new ApiError(401, 'Invalid Department!');
+    if (!designationData) throw new ApiError(401, 'Invalid Designation!');
+
+    userData.profile_url = fileHelper.getImageUrlIfExists(userData.profile_url, 'storage/profile');
     userData.roleName = roleData.role_name;
     userData.designationName = designationData.designation_name;
     userData.departmentName = departmentData.department_name;
-
-    return responceHelper.success({ user: userData, accessToken }, "Login successful", 200);
+    const loginUserData = { user: userData, accessToken: accessToken }
+    return loginUserData;
 };
 
 export const getUserById = async (userId) => {
+    const user_id = userId;
     const userData = await User.findOne({
         where: {
-            id: userId,
+            id: user_id,
             status: '1',
         },
         attributes: { exclude: ['password'] },
     });
     if (!userData) {
-        return responceHelper.error(null, "Invalid email credentials!", 401);
+        throw new ApiError(401, 'Invalid userId!');
     }
     const roleId = userData.roleId;
     const departmentId = userData.departmentId;
     const designationId = userData.designationId;
 
-    const roleData = await Role.findOne({ where: { id: roleId, status: '1' } });
-    if (!roleData) {
-        return responceHelper.error(null, "Invalid Role!", 401);
-    }
-    const departmentData = await Department.findOne({ where: { id: departmentId, status: '1' } });
-    if (!departmentData) {
-        return responceHelper.error(null, "Invalid Department!", 401);
-    }
-    const designationData = await Designation.findOne({ where: { id: designationId, status: '1' } });
-    if (!designationData) {
-        return responceHelper.error(null, "Invalid Designation!", 401);
-    }
+    const [roleData, departmentData, designationData] = await Promise.all([
+        Role.findOne({ _id: roleId, status: '1' }),
+        Department.findOne({ _id: departmentId, status: '1' }),
+        Designation.findOne({ _id: designationId, status: '1' })
+    ]);
 
+    if (!roleData) throw new ApiError(401, 'Invalid Role!');
+    if (!departmentData) throw new ApiError(401, 'Invalid Department!');
+    if (!designationData) throw new ApiError(401, 'Invalid Designation!');
 
     const profileUrl = fileHelper.getImageUrlIfExists(userData.profile_url, 'storage/profile')
     userData.profile_url = profileUrl;
@@ -95,10 +94,7 @@ export const getUserById = async (userId) => {
         departmentName: designationData.designation_name,
         designationName: departmentData.department_name,
     };
-
-
-
-    return responceHelper.success(result, "User Get", 200);
+    return result;
 };
 
 export const getAllUsers = async (filter) => {
@@ -135,45 +131,40 @@ export const getAllUsers = async (filter) => {
 
     const offset = Number(skip) || 0;
     const limit = Number(take) || 10;
-    // const totalCount = await User.count({ where: whereCondition });
+    const users = await User.findAll({
+        where: whereCondition,
+        attributes: { exclude: ['password'] },
+        offset,
+        limit,
+        order: [["id", "DESC"]],
+    });
 
-    try {
-        const users = await User.findAll({
-            where: whereCondition,
-            attributes: { exclude: ['password'] },
-            offset,
-            limit,
-            order: [["id", "DESC"]],
-        });
-
-        if (!users.length) {
-            return responceHelper.success([], "No users found", 200);
-        }
-        const enrichedUsers = await Promise.all(
-            users.map(async (user) => {
-                const roleData = await Role.findOne({ where: { id: user.roleId, status: '1' } });
-                const deptData = await Department.findOne({ where: { id: user.departmentId, status: '1' } });
-                const desigData = await Designation.findOne({ where: { id: user.designationId, status: '1' } });
-                if (!roleData || !deptData || !desigData) {
-                    return null;
-                }
-                user.profile_url = fileHelper.getImageUrlIfExists(user.profile_url, 'storage/profile');
-
-                const result = {
-                    ...user.toJSON(),
-                    roleName: roleData.role_name,
-                    departmentName: desigData.designation_name,
-                    designationName: deptData.department_name,
-                };
-
-                return result;
-            })
-        );
-        const validUsers = enrichedUsers.filter((u) => u !== null);
-        return responceHelper.success(validUsers, "Users fetched successfully", 200);
-    } catch (error) {
-        return responceHelper.error(null, "Failed to fetch users", 500);
+    if (!users.length) {
+        throw new ApiError(200, 'User Not Found');
     }
+    const enrichedUsers = await Promise.all(
+        users.map(async (user) => {
+            const roleData = await Role.findOne({ where: { id: user.roleId, status: '1' } });
+            const deptData = await Department.findOne({ where: { id: user.departmentId, status: '1' } });
+            const desigData = await Designation.findOne({ where: { id: user.designationId, status: '1' } });
+            if (!roleData || !deptData || !desigData) {
+                return null;
+            }
+            user.profile_url = fileHelper.getImageUrlIfExists(user.profile_url, 'storage/profile');
+
+            const result = {
+                ...user.toJSON(),
+                roleName: roleData.role_name,
+                departmentName: desigData.designation_name,
+                designationName: deptData.department_name,
+            };
+
+            return result;
+        })
+    );
+    const validUsers = enrichedUsers.filter((u) => u !== null);
+    return validUsers;
+
 };
 
 export const getCreateUser = async (userData) => {
@@ -295,9 +286,9 @@ export const getUsersBirthday = async (filter) => {
             offset: skip,
             limit: take,
         });
-        return { success: true, message: 'User Birthday', data: users };
+        return { success: true, message: 'User Birthday', data: users, status_code: 200 };
     } catch (error) {
-        return { success: false, message: 'Birthday not received', status_code: 400 };
+        return { success: false, message: 'Birthday not received', data: null, status_code: 400 };
     }
 };
 

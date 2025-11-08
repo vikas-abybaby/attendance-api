@@ -1,5 +1,5 @@
 import Department from '../models/department.js';
-import { responceHelper } from '../utils/index.js';
+import { ApiResponse } from '../utils/index.js';
 
 export const getDepartments = async () => {
 
@@ -9,9 +9,9 @@ export const getDepartments = async () => {
         }
     });
     if (!departments) {
-        return responceHelper.error(null, "Department Not Found!", 401);
+        return ApiResponse.error(null, "Department Not Found!", 401);
     }
-    return responceHelper.success(departments, "Department Get", 200);
+    return ApiResponse.success(departments, "Department Get", 200);
 
 };
 export const getIdByDepartment = async (id) => {
@@ -23,8 +23,8 @@ export const getIdByDepartment = async (id) => {
         }
     });
     if (!department) {
-        return responceHelper.error(null, "Department Not Found!", 401);
+        return ApiResponse.error(null, "Department Not Found!", 401);
     }
-    return responceHelper.success(department, "Department Get", 200);
+    return ApiResponse.success(department, "Department Get", 200);
 
 };

@@ -1,5 +1,5 @@
 import Designation from '../models/designation.js';
-import { responceHelper } from '../utils/index.js';
+import { ApiResponse } from '../utils/index.js';
 
 export const getDesignations = async () => {
 
@@ -9,9 +9,9 @@ export const getDesignations = async () => {
         }
     });
     if (!designations) {
-        return responceHelper.error(null, "Designation Not Found!", 401);
+        return ApiResponse.error(null, "Designation Not Found!", 401);
     }
-    return responceHelper.success(designations, "Designation Get", 200);
+    return ApiResponse.success(designations, "Designation Get", 200);
 
 };
 export const getIdByDesignation = async (id) => {
@@ -24,8 +24,8 @@ export const getIdByDesignation = async (id) => {
         }
     });
     if (!designation) {
-        return responceHelper.error(null, "Designation Not Found!", 401);
+        return ApiResponse.error(null, "Designation Not Found!", 401);
     }
-    return responceHelper.success(designation, "Designation Get", 200);
+    return ApiResponse.success(designation, "Designation Get", 200);
 
 };
